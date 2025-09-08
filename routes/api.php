@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\RegisteredMemberController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Second\EmployeeController;
+use App\Http\Controllers\Second\SecondController;
+use App\Http\Controllers\Second\VehicleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -48,70 +51,16 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         });
         
         //ACTIVE EMPLOYEES FROM THE MAIN SERVER
-        Route::get('/employees', function(Request $request){
-            $search  = $request->query('search');
-            $perPage = $request->query('per_page', 10);
-            // $status  = $request->query('status');
-
-            $query = DB::connection('mysql2')
-                ->table('employment_setup as es')
-                ->leftJoin('employee as e', 'es.employeeid', '=', 'e.employeeid')
-                ->where('es.employment_code', function ($q) {
-                    $q->select(DB::raw('MAX(sub.employment_code)'))
-                    ->from('employment_setup as sub')
-                    ->whereColumn('sub.employeeid', 'es.employeeid')
-                    ->where('sub.isServiceRec', 0);
-                })
-                ->select('e.*', 'es.activation_status', 'es.employment_code');
-
-            // 🔍 Searching (by employee fields)
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('e.employeeid', 'like', "%{$search}%")
-                    ->orWhere('e.firstname', 'like', "%{$search}%")
-                    ->orWhere('e.lastname', 'like', "%{$search}%")
-                    ->orWhere('e.middlename', 'like', "%{$search}%");
-                });
-            }
-
-            // ✅ Active / Inactive filter
-            // if ($status && $status !== 'all') {
-            //     if ($status === 'active') {
-            //         $query->where('es.activation_status', 'Activate');
-            //     } elseif ($status === 'inactive') {
-            //         $query->where('es.activation_status', '!=', 'Activate');
-            //     }
-            // }
-
-            // 📑 Paginate
-            $employees = $query->orderBy('e.employeeid', 'desc')->paginate($perPage);
-
-            // 📊 Counts
-            $roleCounts = [
-                'total'   => DB::connection('mysql2')->table('employee')->count(),
-                'active'  => DB::connection('mysql2')
-                                ->table('employment_setup')
-                                ->where('activation_status', 'Activate')
-                                ->distinct('employeeid')
-                                ->count('employeeid'),
-                'inactive'=> DB::connection('mysql2')
-                                ->table('employment_setup')
-                                ->where('activation_status', '!=', 'Activate')
-                                ->distinct('employeeid')
-                                ->count('employeeid'),
-            ];
-
-            return response()->json([
-                'employees' => $employees,
-                'counts'    => $roleCounts,
-            ]);
-        });
+        Route::get('/employees', [EmployeeController::class, 'index']);
+        Route::get('/vehicles', [VehicleController::class, 'index']);
+        Route::get('/request-data', [SecondController::class, 'requestData']);
     });
     
     //USER ACCOUNTS
     Route::put('/updateuser/{id}', [UserController::class, 'update']);
     Route::put('/changepassword/{id}', [UserController::class, 'changePassword']);
 });
+
 
 Route::post('/login', [AuthController::class, 'login']);
 
