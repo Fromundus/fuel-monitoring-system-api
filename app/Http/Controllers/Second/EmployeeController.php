@@ -30,7 +30,9 @@ class EmployeeController extends Controller
                 $q->where('e.employeeid', 'like', "%{$search}%")
                 ->orWhere('e.firstname', 'like', "%{$search}%")
                 ->orWhere('e.lastname', 'like', "%{$search}%")
-                ->orWhere('e.middlename', 'like', "%{$search}%");
+                ->orWhere('e.middlename', 'like', "%{$search}%")
+                ->orWhere('e.gender', 'like', "%{$search}%")
+                ->orWhere('es.dept_code', 'like', "%{$search}%");
             });
         }
 

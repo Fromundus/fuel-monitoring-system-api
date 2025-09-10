@@ -66,8 +66,11 @@ class BarangayDistanceController extends Controller
                 'municipality' => $to->municipality,
             ],
             'distance_meters' => $distance->distance_meters,
+            'distance' => ceil($distance->distance_meters / 1000),
             'time_ms' => $distance->time_ms,
-            'route' => $distance->route_raw, // optional
+            'route' => $distance->route_raw,
+
+            'quantity' => number_format(ceil($distance->distance_meters / 1000) / 10, 2),
         ]);
     }
 }

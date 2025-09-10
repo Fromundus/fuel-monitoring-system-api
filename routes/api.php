@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\FuelTypeController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\RegisteredMemberController;
+use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Second\EmployeeController;
@@ -51,14 +52,25 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
             Route::put('/', [InventoryController::class, 'update']);
             Route::delete('/', [InventoryController::class, 'destroy']);
         });
+
+        //BARANGAYS
+        Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
+
+        //REQUESTS
+        Route::prefix('/requests')->group(function(){
+            Route::get('/', [RequestController::class, 'index']);
+            Route::get('/{id}', [RequestController::class, 'show']);
+            Route::post('/', [RequestController::class, 'store']);
+            Route::delete('/', [RequestController::class, 'delete']);
+        });
+
         
         //ACTIVE EMPLOYEES FROM THE MAIN SERVER
         Route::get('/employees', [EmployeeController::class, 'index']);
         Route::get('/vehicles', [VehicleController::class, 'index']);
-        Route::get('/request-data', [SecondController::class, 'requestData']);
 
-        //BARANGAYS
-        Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
+        //employee and vehicles
+        Route::get('/request-data', [SecondController::class, 'requestData']);
     });
     
     //USER ACCOUNTS

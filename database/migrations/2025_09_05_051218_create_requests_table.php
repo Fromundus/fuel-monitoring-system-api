@@ -24,14 +24,14 @@ return new class extends Migration
             $table->integer("fuel_type_id");
             $table->string("fuel_type");
 
-            $table->string("checked_by");
-            $table->date("checked_by_date");
-            $table->string("recommending_approval");
-            $table->date("recommending_approval_date");
-            $table->string("approved_by");
-            $table->date("approved_by_date");
-            $table->string("posted_by");
-            $table->date("posted_by_date");
+            $table->string("checked_by")->nullable();
+            $table->date("checked_by_date")->nullable();
+            $table->string("recommending_approval")->nullable();
+            $table->date("recommending_approval_date")->nullable();
+            $table->string("approved_by")->nullable();
+            $table->date("approved_by_date")->nullable();
+            $table->string("posted_by")->nullable();
+            $table->date("posted_by_date")->nullable();
 
             $table->string("type"); // allowance, trip-ticket, emergency
 

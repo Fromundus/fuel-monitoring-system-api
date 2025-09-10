@@ -17,7 +17,7 @@ class TripTicket extends Model
         return $this->belongsTo(Request::class);
     }
 
-    public function tripTicketRows(){
+    public function rows(){
         return $this->hasMany(TripTicketRow::class);
     }
 }
