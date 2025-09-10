@@ -2,6 +2,8 @@
 
 use App\Exports\RegisteredMembersExport;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BarangayController;
+use App\Http\Controllers\Api\BarangayDistanceController;
 use App\Http\Controllers\Api\FuelTypeController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MemberController;
@@ -54,6 +56,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         Route::get('/employees', [EmployeeController::class, 'index']);
         Route::get('/vehicles', [VehicleController::class, 'index']);
         Route::get('/request-data', [SecondController::class, 'requestData']);
+
+        //BARANGAYS
+        Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
     });
     
     //USER ACCOUNTS
@@ -61,6 +66,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::put('/changepassword/{id}', [UserController::class, 'changePassword']);
 });
 
+Route::get('/barangays', [BarangayController::class, 'index']);
 
 Route::post('/login', [AuthController::class, 'login']);
 
