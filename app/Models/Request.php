@@ -9,6 +9,10 @@ class Request extends Model
     protected $fillable = [
         "employeeid",
         "requested_by",
+
+        "delegatedtoid",
+        "delegated_to",
+
         "department",
         "plate_number",
         "purpose",
@@ -28,6 +32,7 @@ class Request extends Model
         "posted_by_date",
 
         "type",
+        "status",
 
         'date',
     ];

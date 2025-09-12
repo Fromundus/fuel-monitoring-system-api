@@ -15,6 +15,10 @@ return new class extends Migration
             $table->id();
             $table->integer("employeeid");
             $table->string("requested_by");
+
+            $table->integer("delegatedtoid");
+            $table->string("delegated_to"); // supervisor or manager
+
             $table->string("department");
             $table->string("plate_number");
             $table->string("purpose");
@@ -33,7 +37,9 @@ return new class extends Migration
             $table->string("posted_by")->nullable();
             $table->date("posted_by_date")->nullable();
 
-            $table->string("type"); // allowance, trip-ticket, emergency
+            $table->string("type"); // allowance, trip-ticket, emergency, delegated
+
+            $table->string("status")->default('pending'); // pending, approved, rejected, released, cancelled
 
             $table->date('date');
             $table->timestamps();

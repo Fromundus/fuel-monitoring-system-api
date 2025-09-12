@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Second;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\EmployeeWithBalanceResource;
+use App\Services\EmployeeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,17 +15,8 @@ class EmployeeController extends Controller
         $perPage = $request->query('per_page', 10);
         // $status  = $request->query('status');
 
-        $query = DB::connection('mysql2')
-            ->table('employment_setup as es')
-            ->leftJoin('employee as e', 'es.employeeid', '=', 'e.employeeid')
-            ->where('es.employment_code', function ($q) {
-                $q->select(DB::raw('MAX(sub.employment_code)'))
-                ->from('employment_setup as sub')
-                ->whereColumn('sub.employeeid', 'es.employeeid')
-                ->where('sub.isServiceRec', 0);
-            })
-            ->select('e.*', 'es.activation_status', 'es.employment_code', 'es.dept_code');
-
+        $query = EmployeeService::fetchActiveEmployees();
+        
         // 🔍 Searching (by employee fields)
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -32,7 +25,8 @@ class EmployeeController extends Controller
                 ->orWhere('e.lastname', 'like', "%{$search}%")
                 ->orWhere('e.middlename', 'like', "%{$search}%")
                 ->orWhere('e.gender', 'like', "%{$search}%")
-                ->orWhere('es.dept_code', 'like', "%{$search}%");
+                ->orWhere('es.dept_code', 'like', "%{$search}%")
+                ->orWhere('es.emp_status', 'like', "%{$search}%");
             });
         }
 
@@ -42,5 +36,43 @@ class EmployeeController extends Controller
         return response()->json([
             'employees' => $employees,
         ]);
+    }
+
+    public function withFuelBalance(Request $request){
+        $search  = $request->query('search');
+        $perPage = $request->query('per_page', 10);
+        // $status  = $request->query('status');
+
+        $query = EmployeeService::fetchEmployeeWithBalances();
+
+        // 🔍 Searching (by employee fields)
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('e.employeeid', 'like', "%{$search}%")
+                ->orWhere('e.firstname', 'like', "%{$search}%")
+                ->orWhere('e.lastname', 'like', "%{$search}%")
+                ->orWhere('e.middlename', 'like', "%{$search}%")
+                ->orWhere('e.gender', 'like', "%{$search}%")
+                ->orWhere('es.dept_code', 'like', "%{$search}%")
+                ->orWhere('es.emp_status', 'like', "%{$search}%");
+            });
+        }
+
+        // 📑 Paginate
+        $employees = $query->orderBy('e.employeeid', 'desc')->paginate($perPage);
+
+        // return response()->json([
+        //     'employees' => EmployeeWithBalanceResource::collection($employees),
+        // ]);
+
+        return response()->json([
+        'employees' => [
+            'data' => EmployeeWithBalanceResource::collection($employees->items()),
+            'current_page' => $employees->currentPage(),
+            'last_page'    => $employees->lastPage(),
+            'per_page'     => $employees->perPage(),
+            'total'        => $employees->total(),
+        ]
+    ]);
     }
 }

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Second\EmployeeController;
 use App\Http\Controllers\Second\SecondController;
 use App\Http\Controllers\Second\VehicleController;
+use App\Services\EmployeeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -78,6 +79,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::put('/changepassword/{id}', [UserController::class, 'changePassword']);
 });
 
+Route::get('/employeeswithbalance', [EmployeeController::class, 'withFuelBalance']);
+
+
 Route::get('/barangays', [BarangayController::class, 'index']);
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -86,4 +90,11 @@ Route::get('/test', function(){
     return response()->json([
         "message" => "success"
     ], 200);
+});
+
+
+Route::get('/currentfuelbalance/{id}', function($id){
+    $currentBalance = EmployeeService::getCurrentBalance($id);
+
+    return response($currentBalance);
 });

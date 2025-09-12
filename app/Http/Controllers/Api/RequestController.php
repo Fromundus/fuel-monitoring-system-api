@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Barangay;
 use App\Models\Request as ModelsRequest;
 use App\Models\TripTicket;
 use App\Models\TripTicketRow;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class RequestController extends Controller
 {
@@ -36,6 +38,7 @@ class RequestController extends Controller
         $counts = [
             'total'      => ModelsRequest::count(),
             'allowance' => ModelsRequest::where('type', 'allowance')->count(),
+            'delegated'      => ModelsRequest::where('type', 'delegated')->count(),
             'trip_ticket'      => ModelsRequest::where('type', 'trip-ticket')->count(),
             'emergency'       => ModelsRequest::where('type', 'emergency')->count(),
         ];
@@ -48,32 +51,158 @@ class RequestController extends Controller
 
     public function show($id){
         $request = ModelsRequest::with("tripTickets.rows")->findOrFail($id);
+        $barangays = Barangay::all();
         
         return response()->json([
             "data" => $request,
+            "barangays" => $barangays,
         ]);
     }
 
-    public function store(Request $request){
-        $request->validate([
-            "employeeid" => "required|integer",
-            "requested_by" => "required|string",
-            "department" => "required|string",
-            "plate_number" => "required|string",
-            "purpose" => "required|string",
-            "quantity" => "required|numeric|min:1",
-            "unit" => "required|string",
-            "fuel_type_id" => "required|string",
-            "fuel_type" => "required|string",
-            "type" => "required|string",
+    // public function store(Request $request){
+    //     $request->validate([
+    //         "employeeid" => "required|integer",
+    //         "requested_by" => "required|string",
+    //         "department" => "required|string",
+    //         "plate_number" => "required|string",
+    //         "purpose" => "required|string",
+    //         "quantity" => "required|numeric|min:1",
+    //         "unit" => "required|string",
+    //         "fuel_type_id" => "required|string",
+    //         "fuel_type" => "required|string",
+    //         "type" => "required|string",
 
-            "tripTickets"                  => "required|array|min:1",
-            "tripTickets.*.departure"      => "required|string",
-            "tripTickets.*.destination"    => "required|string",
-            "tripTickets.*.distance"       => "required|numeric|min:1",
-            "tripTickets.*.quantity"       => "required|numeric|min:1",
-            "tripTickets.*.date"           => "required|date|before_or_equal:today",
-        ]);
+    //         "tripTickets"                  => "required|array|min:1",
+    //         "tripTickets.*.departure"      => "required|string",
+    //         "tripTickets.*.destination"    => "required|string",
+    //         "tripTickets.*.distance"       => "required|numeric|min:1",
+    //         "tripTickets.*.quantity"       => "required|numeric|min:1",
+    //         "tripTickets.*.date"           => "required|date|before_or_equal:today",
+    //     ]);
+
+    //     try {
+
+    //         DB::beginTransaction();
+
+    //         $fuelRequest = ModelsRequest::create([
+    //             "employeeid" => $request->employeeid,
+    //             "requested_by" => $request->requested_by,
+    //             "department" => $request->department,
+    //             "plate_number" => $request->plate_number,
+    //             "purpose" => $request->purpose,
+    //             "quantity" => $request->quantity,
+    //             "unit" => $request->unit,
+    //             "fuel_type_id" => $request->fuel_type_id,
+    //             "fuel_type" => $request->fuel_type,
+    //             "type" => $request->type,
+
+    //             "date" => Carbon::now(),
+    //         ]);
+
+    //         if($fuelRequest){
+    //             $tripTicket = TripTicket::create([
+    //                 "request_id" => $fuelRequest->id,
+    //                 "plate_number" => $fuelRequest->plate_number,
+    //                 "driver" => $fuelRequest->requested_by,
+    //                 "date" => $fuelRequest->date,
+    //             ]);
+
+    //             if($tripTicket){
+    //                 $tripTicketRows = $request->tripTickets;
+
+    //                 foreach($tripTicketRows as $item){
+    //                     TripTicketRow::create([
+    //                         "trip_ticket_id" => $tripTicket->id,
+    //                         "departure" => $item["departure"],
+    //                         "destination" => $item["destination"],
+    //                         "distance" => $item["distance"],
+    //                         "quantity" => $item["quantity"],
+    //                         "date" => $item["date"],
+    //                     ]);
+    //                 }
+                    
+    //             }
+    //         }
+            
+    //         DB::commit();
+            
+    //         return response()->json([
+    //             "message" => "Request Successfully Created", 
+    //         ], 200);
+
+    //     } catch (\Exception $e) {
+    //         DB::rollBack();
+
+    //         throw $e;
+    //     }
+
+    // }
+    
+    public function store(Request $request){
+        $type = $request->type;
+
+        if($type === "trip-ticket"){
+            $request->validate([
+                "employeeid" => "required|integer",
+                "requested_by" => "required|string",
+                "department" => "required|string",
+                "plate_number" => "required|string",
+                "purpose" => "required|string",
+                "quantity" => "required|numeric|min:1",
+                "unit" => "required|string",
+                "fuel_type_id" => "required|string",
+                "fuel_type" => "required|string",
+                "type" => "required|string",
+    
+                "tripTickets"                  => "required|array|min:1",
+                "tripTickets.*.departure"      => "required|string",
+                "tripTickets.*.destination"    => "required|string",
+                "tripTickets.*.distance"       => "required|numeric|min:1",
+                "tripTickets.*.quantity"       => "required|numeric|min:1",
+                "tripTickets.*.date"           => "required|date|before_or_equal:today",
+            ]);
+        } else if ($type === "allowance") {
+            $request->validate([
+                "employeeid" => "required|integer",
+                "requested_by" => "required|string",
+                "department" => "required|string",
+                "plate_number" => "required|string",
+                "purpose" => "required|string",
+                "quantity" => "required|numeric|min:1",
+                "unit" => "required|string",
+                "fuel_type_id" => "required|string",
+                "fuel_type" => "required|string",
+                "type" => "required|string",
+            ]);
+        } else if ($type === "delegated"){
+            $request->validate([
+                "employeeid" => "required|integer",
+                "requested_by" => "required|string",
+                "delegatedtoid" => "required|integer",
+                "delegated_to" => "required|string",
+                "department" => "required|string",
+                "plate_number" => "required|string",
+                "purpose" => "required|string",
+                "quantity" => "required|numeric|min:1",
+                "unit" => "required|string",
+                "fuel_type_id" => "required|string",
+                "fuel_type" => "required|string",
+                "type" => "required|string",
+            ]);
+        } else if ($type === "emergency"){
+            $request->validate([
+                "employeeid" => "required|integer",
+                "requested_by" => "required|string",
+                "department" => "required|string",
+                "plate_number" => "required|string",
+                "purpose" => "required|string",
+                "quantity" => "required|numeric|min:1",
+                "unit" => "required|string",
+                "fuel_type_id" => "required|string",
+                "fuel_type" => "required|string",
+                "type" => "required|string",
+            ]);
+        }
 
         try {
 
@@ -82,6 +211,10 @@ class RequestController extends Controller
             $fuelRequest = ModelsRequest::create([
                 "employeeid" => $request->employeeid,
                 "requested_by" => $request->requested_by,
+
+                "delegatedtoid" => $type === "delegated" ? $request->delegatedtoid : null,
+                "delegated_to" => $type === "delegated" ? $request->delegated_to : null,
+
                 "department" => $request->department,
                 "plate_number" => $request->plate_number,
                 "purpose" => $request->purpose,
@@ -94,7 +227,8 @@ class RequestController extends Controller
                 "date" => Carbon::now(),
             ]);
 
-            if($fuelRequest){
+
+            if($fuelRequest && $type === "trip-ticket"){
                 $tripTicket = TripTicket::create([
                     "request_id" => $fuelRequest->id,
                     "plate_number" => $fuelRequest->plate_number,
