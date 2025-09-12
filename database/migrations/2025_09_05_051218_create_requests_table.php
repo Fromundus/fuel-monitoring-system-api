@@ -39,7 +39,7 @@ return new class extends Migration
 
             $table->string("type"); // allowance, trip-ticket, emergency, delegated
 
-            $table->string("status")->default('pending'); // pending, approved, rejected, released, cancelled
+            $table->enum("status", ['pending', 'approved', 'rejected', 'released', 'cancelled'])->default('pending'); // pending, approved, rejected, released, cancelled
 
             $table->date('date');
             $table->timestamps();

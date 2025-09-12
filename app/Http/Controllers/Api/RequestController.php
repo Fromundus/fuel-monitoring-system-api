@@ -58,85 +58,6 @@ class RequestController extends Controller
             "barangays" => $barangays,
         ]);
     }
-
-    // public function store(Request $request){
-    //     $request->validate([
-    //         "employeeid" => "required|integer",
-    //         "requested_by" => "required|string",
-    //         "department" => "required|string",
-    //         "plate_number" => "required|string",
-    //         "purpose" => "required|string",
-    //         "quantity" => "required|numeric|min:1",
-    //         "unit" => "required|string",
-    //         "fuel_type_id" => "required|string",
-    //         "fuel_type" => "required|string",
-    //         "type" => "required|string",
-
-    //         "tripTickets"                  => "required|array|min:1",
-    //         "tripTickets.*.departure"      => "required|string",
-    //         "tripTickets.*.destination"    => "required|string",
-    //         "tripTickets.*.distance"       => "required|numeric|min:1",
-    //         "tripTickets.*.quantity"       => "required|numeric|min:1",
-    //         "tripTickets.*.date"           => "required|date|before_or_equal:today",
-    //     ]);
-
-    //     try {
-
-    //         DB::beginTransaction();
-
-    //         $fuelRequest = ModelsRequest::create([
-    //             "employeeid" => $request->employeeid,
-    //             "requested_by" => $request->requested_by,
-    //             "department" => $request->department,
-    //             "plate_number" => $request->plate_number,
-    //             "purpose" => $request->purpose,
-    //             "quantity" => $request->quantity,
-    //             "unit" => $request->unit,
-    //             "fuel_type_id" => $request->fuel_type_id,
-    //             "fuel_type" => $request->fuel_type,
-    //             "type" => $request->type,
-
-    //             "date" => Carbon::now(),
-    //         ]);
-
-    //         if($fuelRequest){
-    //             $tripTicket = TripTicket::create([
-    //                 "request_id" => $fuelRequest->id,
-    //                 "plate_number" => $fuelRequest->plate_number,
-    //                 "driver" => $fuelRequest->requested_by,
-    //                 "date" => $fuelRequest->date,
-    //             ]);
-
-    //             if($tripTicket){
-    //                 $tripTicketRows = $request->tripTickets;
-
-    //                 foreach($tripTicketRows as $item){
-    //                     TripTicketRow::create([
-    //                         "trip_ticket_id" => $tripTicket->id,
-    //                         "departure" => $item["departure"],
-    //                         "destination" => $item["destination"],
-    //                         "distance" => $item["distance"],
-    //                         "quantity" => $item["quantity"],
-    //                         "date" => $item["date"],
-    //                     ]);
-    //                 }
-                    
-    //             }
-    //         }
-            
-    //         DB::commit();
-            
-    //         return response()->json([
-    //             "message" => "Request Successfully Created", 
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         DB::rollBack();
-
-    //         throw $e;
-    //     }
-
-    // }
     
     public function store(Request $request){
         $type = $request->type;
@@ -265,6 +186,24 @@ class RequestController extends Controller
             throw $e;
         }
 
+    }
+
+    public function updateStatus(Request $request, $id){
+        $validated = $request->validate([
+            "status" => "required|string|in:pending,approved,rejected,released,cancelled"
+        ]);
+
+        $fuelRequest = ModelsRequest::findOrFail($id);
+
+        if($fuelRequest){
+            $fuelRequest->update([
+                "status" => $validated["status"],
+            ]);
+
+            return response()->json([
+                "message" => "Updated Successfully"
+            ]);
+        }
     }
 
     public function delete(Request $request){
