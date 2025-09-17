@@ -105,6 +105,14 @@ class RequestController extends Controller
                 "type" => "required|string",
                 "source" => "required|string",
             ]);
+
+            $currentBalance = EmployeeService::getCurrentBalance($request->employeeid);
+
+            if($request->quantity > $currentBalance){
+                return response()->json([
+                    "message" => "Grabe ka na"
+                ], 422);
+            }
         } else if ($type === "delegated"){
             $request->validate([
                 "employeeid" => "required|integer",
@@ -171,7 +179,7 @@ class RequestController extends Controller
             if($fuelRequest && $type === "trip-ticket"){
                 $tripTicket = TripTicket::create([
                     "request_id" => $fuelRequest->id,
-                    "plate_number" => $fuelRequest->plate_number,
+                    "plate_number" => $fuelRequest->plate_number ?? null,
                     "driver" => $fuelRequest->requested_by,
                     "date" => $fuelRequest->date,
                 ]);
@@ -196,6 +204,7 @@ class RequestController extends Controller
             DB::commit();
             
             return response()->json([
+                "data" => $fuelRequest,
                 "message" => "Request Successfully Created", 
             ], 200);
 

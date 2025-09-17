@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('trip_tickets', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("request_id");
-            $table->string("plate_number");
+            $table->string("plate_number")->nullable();
             $table->string("driver");
             $table->date('date');
 
