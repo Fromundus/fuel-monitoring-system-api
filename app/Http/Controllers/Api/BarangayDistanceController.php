@@ -70,7 +70,7 @@ class BarangayDistanceController extends Controller
             'time_ms' => $distance->time_ms,
             'route' => $distance->route_raw,
 
-            'quantity' => number_format(ceil($distance->distance_meters / 1000) / 10, 2),
+            'quantity' => number_format(ceil($distance->distance_meters / 1000) / 35, 2),
         ]);
     }
 }

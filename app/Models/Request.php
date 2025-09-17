@@ -14,6 +14,7 @@ class Request extends Model
         "delegated_to",
 
         "department",
+        "division",
         "plate_number",
         "purpose",
 
@@ -32,6 +33,8 @@ class Request extends Model
         "posted_by_date",
 
         "type",
+        "source",
+
         "status",
 
         'date',

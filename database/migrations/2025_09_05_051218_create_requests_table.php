@@ -20,7 +20,8 @@ return new class extends Migration
             $table->string("delegated_to"); // supervisor or manager
 
             $table->string("department");
-            $table->string("plate_number");
+            $table->string("division")->nullable();
+            $table->string("plate_number")->nullable();
             $table->string("purpose");
 
             $table->decimal("quantity", 12, 2)->default(0);
@@ -40,6 +41,8 @@ return new class extends Migration
             $table->string("type"); // allowance, trip-ticket, emergency, delegated
 
             $table->enum("status", ['pending', 'approved', 'rejected', 'released', 'cancelled'])->default('pending'); // pending, approved, rejected, released, cancelled
+
+            $table->string("source")->default('ficelco');
 
             $table->date('date');
             $table->timestamps();

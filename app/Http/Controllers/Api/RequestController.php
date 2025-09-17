@@ -7,6 +7,7 @@ use App\Models\Barangay;
 use App\Models\Request as ModelsRequest;
 use App\Models\TripTicket;
 use App\Models\TripTicketRow;
+use App\Services\EmployeeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class RequestController extends Controller
         $search = $request->query('search');
         $perPage = $request->query('per_page', 10);
         $type = $request->query('type');
+        $status = $request->query('status');
 
         $query = ModelsRequest::query()->with("tripTickets.rows");
 
@@ -31,6 +33,10 @@ class RequestController extends Controller
 
         if ($type && $type !== 'all') {
             $query->where('type', $type);
+        }
+
+        if($status && $status !== 'all'){
+            $query->where('status', $status);
         }
 
         $requests = $query->orderBy('id', 'desc')->paginate($perPage);
@@ -67,13 +73,15 @@ class RequestController extends Controller
                 "employeeid" => "required|integer",
                 "requested_by" => "required|string",
                 "department" => "required|string",
-                "plate_number" => "required|string",
+                "division" => "nullable|string",
+                "plate_number" => "nullable|string",
                 "purpose" => "required|string",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
+                "source" => "required|string",
     
                 "tripTickets"                  => "required|array|min:1",
                 "tripTickets.*.departure"      => "required|string",
@@ -87,13 +95,15 @@ class RequestController extends Controller
                 "employeeid" => "required|integer",
                 "requested_by" => "required|string",
                 "department" => "required|string",
-                "plate_number" => "required|string",
+                "division" => "nullable|string",
+                "plate_number" => "nullable|string",
                 "purpose" => "required|string",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
+                "source" => "required|string",
             ]);
         } else if ($type === "delegated"){
             $request->validate([
@@ -102,26 +112,30 @@ class RequestController extends Controller
                 "delegatedtoid" => "required|integer",
                 "delegated_to" => "required|string",
                 "department" => "required|string",
-                "plate_number" => "required|string",
+                "division" => "nullable|string",
+                "plate_number" => "nullable|string",
                 "purpose" => "required|string",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
+                "source" => "required|string",
             ]);
         } else if ($type === "emergency"){
             $request->validate([
                 "employeeid" => "required|integer",
                 "requested_by" => "required|string",
                 "department" => "required|string",
-                "plate_number" => "required|string",
+                "division" => "nullable|string",
+                "plate_number" => "nullable|string",
                 "purpose" => "required|string",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
+                "source" => "required|string",
             ]);
         }
 
@@ -137,13 +151,18 @@ class RequestController extends Controller
                 "delegated_to" => $type === "delegated" ? $request->delegated_to : null,
 
                 "department" => $request->department,
-                "plate_number" => $request->plate_number,
+
+                "division" => $request->division ?? null,
+
+                "plate_number" => $request->plate_number ?? null,
                 "purpose" => $request->purpose,
                 "quantity" => $request->quantity,
                 "unit" => $request->unit,
                 "fuel_type_id" => $request->fuel_type_id,
                 "fuel_type" => $request->fuel_type,
                 "type" => $request->type,
+
+                "source" => $request->source,
 
                 "date" => Carbon::now(),
             ]);
@@ -199,6 +218,14 @@ class RequestController extends Controller
             $fuelRequest->update([
                 "status" => $validated["status"],
             ]);
+
+            if($validated["status"] === "released" && ($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated")){
+                $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid);
+
+                $allowance->update([
+                    "used" => $allowance->used + $fuelRequest->quantity,
+                ]);
+            }
 
             return response()->json([
                 "message" => "Updated Successfully"
