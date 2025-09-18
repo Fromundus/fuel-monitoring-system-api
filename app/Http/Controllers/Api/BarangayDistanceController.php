@@ -74,4 +74,165 @@ class BarangayDistanceController extends Controller
             'quantity' => number_format(ceil(ceil($distance->distance_meters / 1000) / 35), 2),
         ]);
     }
+
+    // public function getDistances(Request $request)
+    // {
+    //     $rows = $request->input('rows'); // expect array of tripTicketRows
+
+    //     if (!$rows || !is_array($rows)) {
+    //         return response()->json(['error' => 'Rows array is required'], 400);
+    //     }
+
+    //     $result = [];
+
+    //     foreach ($rows as $row) {
+    //         $departure = $row['departure'] ?? null;
+    //         $destination = $row['destination'] ?? null;
+
+    //         if (!$departure || !$destination) {
+    //             // skip if missing
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //             ]);
+    //             continue;
+    //         }
+
+    //         // split "Barangay, Municipality"
+    //         [$fromName, $fromMunicipality] = array_map('trim', explode(',', $departure));
+    //         [$toName, $toMunicipality] = array_map('trim', explode(',', $destination));
+
+    //         $from = Barangay::where('name', $fromName)
+    //                         ->where('municipality', $fromMunicipality)
+    //                         ->first();
+
+    //         $to = Barangay::where('name', $toName)
+    //                     ->where('municipality', $toMunicipality)
+    //                     ->first();
+
+    //         if (!$from || !$to) {
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //                 'error' => 'Barangay not found',
+    //             ]);
+    //             continue;
+    //         }
+
+    //         $idA = min($from->id, $to->id);
+    //         $idB = max($from->id, $to->id);
+
+    //         $distance = BarangayDistance::where('barangay_a_id', $idA)
+    //                                     ->where('barangay_b_id', $idB)
+    //                                     ->first();
+
+    //         if (!$distance) {
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //                 'error' => 'Distance not calculated',
+    //             ]);
+    //             continue;
+    //         }
+
+    //         // enrich row
+    //         $result[] = array_merge($row, [
+    //             // 'distance_meters' => $distance->distance_meters,
+    //             'distance' => ceil($distance->distance_meters / 1000),
+    //             // 'time_ms' => $distance->time_ms,
+    //             // 'route' => $distance->route_raw,
+    //             'quantity' => number_format(
+    //                 ceil(ceil($distance->distance_meters / 1000) / 35), 2
+    //             ),
+    //         ]);
+    //     }
+
+    //     return response()->json($result);
+    // }
+
+    public function getDistances(Request $request)
+    {
+        $rows = $request->input('rows'); // expect array of tripTicketRows
+
+        if (!$rows || !is_array($rows)) {
+            return response()->json(['error' => 'Rows array is required'], 400);
+        }
+
+        $result = [];
+        $exactTotalDistance = 0;
+        $totalDistance = 0;
+        $totalQuantity = 0;
+
+        foreach ($rows as $row) {
+            $departure = $row['departure'] ?? null;
+            $destination = $row['destination'] ?? null;
+
+            if (!$departure || !$destination) {
+                $result[] = array_merge($row, [
+                    'distance' => 0,
+                    'quantity' => 0,
+                ]);
+                continue;
+            }
+
+            // split "Barangay, Municipality"
+            [$fromName, $fromMunicipality] = array_map('trim', explode(',', $departure));
+            [$toName, $toMunicipality] = array_map('trim', explode(',', $destination));
+
+            $from = Barangay::where('name', $fromName)
+                            ->where('municipality', $fromMunicipality)
+                            ->first();
+
+            $to = Barangay::where('name', $toName)
+                        ->where('municipality', $toMunicipality)
+                        ->first();
+
+            if (!$from || !$to) {
+                $result[] = array_merge($row, [
+                    'distance' => 0,
+                    'quantity' => 0,
+                    'error' => 'Barangay not found',
+                ]);
+                continue;
+            }
+
+            $idA = min($from->id, $to->id);
+            $idB = max($from->id, $to->id);
+
+            $distance = BarangayDistance::where('barangay_a_id', $idA)
+                                        ->where('barangay_b_id', $idB)
+                                        ->first();
+
+            if (!$distance) {
+                $result[] = array_merge($row, [
+                    'distance' => 0,
+                    'quantity' => 0,
+                    'error' => 'Distance not calculated',
+                ]);
+                continue;
+            }
+
+            $exactDistance = $distance->distance_meters / 1000;
+            $distanceKm = ceil($distance->distance_meters / 1000);
+            // $quantity = ceil($distanceKm / 35);
+            $quantity = $distanceKm / 35;
+
+            // add to totals
+            $exactTotalDistance += $exactDistance;
+            $totalDistance += $distanceKm;
+            $totalQuantity += $quantity;
+
+            $result[] = array_merge($row, [
+                'distance' => $distanceKm,
+                'quantity' => number_format($quantity, 2),
+            ]);
+        }
+
+        return response()->json([
+            'rows' => $result,
+            'exact_total_distance' => number_format($exactTotalDistance, 2),
+            'total_distance' => number_format($totalDistance, 2),
+            'total_quantity' => number_format($totalQuantity, 2),
+        ]);
+    }
 }

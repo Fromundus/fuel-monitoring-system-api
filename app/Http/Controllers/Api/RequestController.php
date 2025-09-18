@@ -87,7 +87,7 @@ class RequestController extends Controller
                 "tripTickets.*.departure"      => "required|string",
                 "tripTickets.*.destination"    => "required|string",
                 "tripTickets.*.distance"       => "required|numeric|min:1",
-                "tripTickets.*.quantity"       => "required|numeric|min:1",
+                "tripTickets.*.quantity"       => "required|numeric|min:0",
                 "tripTickets.*.date"           => "required|date|before_or_equal:today",
             ]);
         } else if ($type === "allowance") {

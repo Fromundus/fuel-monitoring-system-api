@@ -56,6 +56,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
 
         //BARANGAYS
         Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
+        Route::post('/distances', [BarangayDistanceController::class, 'getDistances']);
 
         //REQUESTS
         Route::prefix('/requests')->group(function(){
