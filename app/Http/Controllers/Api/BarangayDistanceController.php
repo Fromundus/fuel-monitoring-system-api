@@ -224,13 +224,13 @@ class BarangayDistanceController extends Controller
 
             $result[] = array_merge($row, [
                 'distance' => $distanceKm,
-                'quantity' => number_format($quantity, 2),
+                'quantity' => number_format($quantity, decimals: 2),
             ]);
         }
 
         return response()->json([
             'rows' => $result,
-            'exact_total_distance' => number_format($exactTotalDistance, 2),
+            // 'exact_total_distance' => number_format($exactTotalDistance, 2),
             'total_distance' => number_format($totalDistance, 2),
             'total_quantity' => number_format($totalQuantity, 2),
         ]);
