@@ -25,6 +25,7 @@ class EmployeeWithBalanceResource extends JsonResource
             "created" => $this->created,
             "createdby" => $this->createdby,
             "dept_code" => $this->dept_code,
+            "div_code" => $this->div_code,
             "emp_status" => $this->emp_status,
             "employeeid" => $this->employeeid,
             "employment_code" => $this->employment_code,

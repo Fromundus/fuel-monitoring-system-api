@@ -67,6 +67,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
             Route::delete('/', [RequestController::class, 'delete']);
         });
 
+        Route::post('/scan/request', [RequestController::class, 'scanRequest']);
         
         //ACTIVE EMPLOYEES FROM THE MAIN SERVER
         Route::get('/employees', [EmployeeController::class, 'index']);

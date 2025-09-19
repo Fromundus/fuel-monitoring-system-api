@@ -45,6 +45,8 @@ return new class extends Migration
             $table->string("source")->default('ficelco');
 
             $table->date('date');
+
+            $table->string("reference_number");
             $table->timestamps();
         });
     }

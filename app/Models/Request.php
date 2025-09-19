@@ -38,6 +38,8 @@ class Request extends Model
         "status",
 
         'date',
+
+        'reference_number',
     ];
 
     public function tripTickets(){

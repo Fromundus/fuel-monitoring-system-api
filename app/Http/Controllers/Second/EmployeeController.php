@@ -34,7 +34,13 @@ class EmployeeController extends Controller
         $employees = $query->orderBy('e.employeeid', 'desc')->paginate($perPage);
 
         return response()->json([
-            'employees' => $employees,
+            'employees' => [
+                'data' => EmployeeWithBalanceResource::collection($employees->items()),
+                'current_page' => $employees->currentPage(),
+                'last_page'    => $employees->lastPage(),
+                'per_page'     => $employees->perPage(),
+                'total'        => $employees->total(),
+            ]
         ]);
     }
 

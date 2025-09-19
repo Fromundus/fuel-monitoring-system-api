@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class RequestController extends Controller
 {
@@ -151,6 +152,8 @@ class RequestController extends Controller
 
             DB::beginTransaction();
 
+            $reference_number = 'REF-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+
             $fuelRequest = ModelsRequest::create([
                 "employeeid" => $request->employeeid,
                 "requested_by" => $request->requested_by,
@@ -173,6 +176,8 @@ class RequestController extends Controller
                 "source" => $request->source,
 
                 "date" => Carbon::now(),
+
+                "reference_number" => $reference_number,
             ]);
 
 
@@ -240,6 +245,25 @@ class RequestController extends Controller
                 "message" => "Updated Successfully"
             ]);
         }
+    }
+
+    public function scanRequest(Request $request){
+        $validated = $request->validate([
+            "reference_number" => "required|string",
+        ]);
+
+        $fuelRequest = ModelsRequest::where("reference_number", $validated["reference_number"])->first();
+
+        if($fuelRequest){
+            return response()->json([
+                "data" => $fuelRequest->id,
+            ]);
+        } else {
+            return response()->json([
+                "message" => "Request not Found",
+            ], 404);
+        }
+
     }
 
     public function delete(Request $request){
