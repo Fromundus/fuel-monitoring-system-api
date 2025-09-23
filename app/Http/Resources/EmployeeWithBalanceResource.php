@@ -15,6 +15,10 @@ class EmployeeWithBalanceResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $latest_fuel_period = EmployeeService::getLatestBalance($this->employeeid, 'gasoline-diesel');
+        $latest_oil_period = EmployeeService::getLatestBalance($this->employeeid, '4t2t');
+        $latest_fluid_period = EmployeeService::getLatestBalance($this->employeeid, 'bfluid');
+        
         return [
             "WithUndertime" => $this->WithUndertime,
             "activation_status" => $this->activation_status,
@@ -41,7 +45,15 @@ class EmployeeWithBalanceResource extends JsonResource
             "photopath" => $this->photopath,
             "profilepic" => $this->profilepic,
             "suffix" => $this->suffix,
-            "current_fuel_balance" => EmployeeService::getCurrentBalance($this->employeeid),
+
+            "current_fuel_balance" => EmployeeService::getCurrentBalance($this->employeeid, 'gasoline-diesel'),
+            "current_fuel_period" => $latest_fuel_period->week_start ?? null,
+            
+            "current_oil_balance" => EmployeeService::getCurrentBalance($this->employeeid, '4t2t'),
+            "current_oil_period" => $latest_oil_period->week_start ?? null,
+            
+            "current_fluid_balance" => EmployeeService::getCurrentBalance($this->employeeid, 'bfluid'),
+            "current_fluid_period" => $latest_fluid_period->week_start ?? null,
         ];
     }
 }

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('carried_over', 8, 2)->default(0);
             $table->decimal('used', 8, 2)->default(0);
             $table->decimal('advanced', 8, 2)->default(0);
+            $table->string('type'); // gasoline-diesel, 4t2t, bfluid
             $table->timestamps();
         });
     }

@@ -57,15 +57,15 @@ class EmployeeService
             );
     }
 
-    public static function getLatestBalance(int $employeeId){
-        $allowance = FuelAllowance::where("employeeid", $employeeId)->orderByDesc("week_start")->first();
+    public static function getLatestBalance(int $employeeId, string $type){
+        $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("week_start")->first();
 
         return $allowance;
     }
 
-    public static function getCurrentBalance(int $employeeId): float
+    public static function getCurrentBalance(int $employeeId, string $type): float
     {
-        $allowance = EmployeeService::getLatestBalance($employeeId);
+        $allowance = EmployeeService::getLatestBalance($employeeId, $type);
 
         if (!$allowance) {
             return 0.0; // No allowance exists yet

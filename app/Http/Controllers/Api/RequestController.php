@@ -107,7 +107,7 @@ class RequestController extends Controller
                 "source" => "required|string",
             ]);
 
-            $currentBalance = EmployeeService::getCurrentBalance($request->employeeid);
+            $currentBalance = EmployeeService::getCurrentBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
 
             if($request->quantity > $currentBalance){
                 return response()->json([
@@ -234,7 +234,7 @@ class RequestController extends Controller
             ]);
 
             if($validated["status"] === "released" && ($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated")){
-                $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid);
+                $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type));
 
                 $allowance->update([
                     "used" => $allowance->used + $fuelRequest->quantity,
@@ -280,5 +280,19 @@ class RequestController extends Controller
         // }
 
         return response()->json(['message' => 'Requests deleted successfully']);
+    }
+
+    private function getAllowanceType(string $type){
+        $fuelType = '';
+
+        if($type === "Diesel" || $type === "Gasoline"){
+            $fuelType = 'gasoline-diesel';
+        } else if ($type === "4T" || $type === "2T"){
+            $fuelType = '4t2t';
+        } else if ($type === "B-fluid"){
+            $fuelType = 'bfluid';
+        }
+
+        return $fuelType;
     }
 }

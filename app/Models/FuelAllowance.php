@@ -13,5 +13,6 @@ class FuelAllowance extends Model
         'carried_over',
         'used',
         'advanced',
+        'type',
     ];
 }
