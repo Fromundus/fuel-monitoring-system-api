@@ -70,27 +70,44 @@ class RequestController extends Controller
         $type = $request->type;
 
         if($type === "trip-ticket"){
-            $request->validate([
-                "employeeid" => "required|integer",
-                "requested_by" => "required|string",
-                "department" => "required|string",
-                "division" => "nullable|string",
-                "plate_number" => "nullable|string",
-                "purpose" => "required|string",
-                "quantity" => "required|numeric|min:1",
-                "unit" => "required|string",
-                "fuel_type_id" => "required|string",
-                "fuel_type" => "required|string",
-                "type" => "required|string",
-                "source" => "required|string",
-    
-                "tripTickets"                  => "required|array|min:1",
-                "tripTickets.*.departure"      => "required|string",
-                "tripTickets.*.destination"    => "required|string",
-                "tripTickets.*.distance"       => "required|numeric|min:1",
-                "tripTickets.*.quantity"       => "required|numeric|min:0",
-                "tripTickets.*.date"           => "required|date|before_or_equal:today",
-            ]);
+            if($request->fuel_type === "Gasoline" || $request->fuel_type === "Diesel"){
+                $request->validate([
+                    "employeeid" => "required|integer",
+                    "requested_by" => "required|string",
+                    "department" => "required|string",
+                    "division" => "nullable|string",
+                    "plate_number" => "nullable|string",
+                    "purpose" => "required|string",
+                    "quantity" => "required|numeric|min:0",
+                    "unit" => "required|string",
+                    "fuel_type_id" => "required|string",
+                    "fuel_type" => "required|string",
+                    "type" => "required|string",
+                    "source" => "required|string",
+        
+                    "tripTickets"                  => "required|array|min:1",
+                    "tripTickets.*.departure"      => "required|string",
+                    "tripTickets.*.destination"    => "required|string",
+                    "tripTickets.*.distance"       => "required|numeric|min:1",
+                    "tripTickets.*.quantity"       => "required|numeric|min:0",
+                    "tripTickets.*.date"           => "required|date|before_or_equal:today",
+                ]);
+            } else if ($request->fuel_type === "4T" || $request->fuel_type === "2T") {
+                $request->validate([
+                    "employeeid" => "required|integer",
+                    "requested_by" => "required|string",
+                    "department" => "required|string",
+                    "division" => "nullable|string",
+                    "plate_number" => "nullable|string",
+                    "purpose" => "required|string",
+                    "quantity" => "required|numeric|min:0",
+                    "unit" => "required|string",
+                    "fuel_type_id" => "required|string",
+                    "fuel_type" => "required|string",
+                    "type" => "required|string",
+                    "source" => "required|string",
+                ]);
+            }
         } else if ($type === "allowance") {
             $request->validate([
                 "employeeid" => "required|integer",
@@ -226,25 +243,47 @@ class RequestController extends Controller
             "status" => "required|string|in:pending,approved,rejected,released,cancelled"
         ]);
 
-        $fuelRequest = ModelsRequest::findOrFail($id);
+        try {
+            DB::beginTransaction();
 
-        if($fuelRequest){
-            $fuelRequest->update([
-                "status" => $validated["status"],
-            ]);
+            $fuelRequest = ModelsRequest::findOrFail($id);
+    
+            if($fuelRequest){
+                $fuelRequest->update([
+                    "status" => $validated["status"],
+                ]);
+    
+                if($validated["status"] === "released" && ($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated")){
+                    $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type));
+    
+                    $allowance->update([
+                        "used" => $allowance->used + $fuelRequest->quantity,
+                    ]);
+                }
+    
+                if ($validated["status"] === "released" && $fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "gasoline-diesel") {
+                    EmployeeService::checkTripTicketAllowance($fuelRequest->employeeid);
+                } else if ($validated["status"] === "released" && $fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "4t2t") {
+                    $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, 'trip-ticket-allowance');
+    
+                    $allowance->update([
+                        "used" => $allowance->used + $fuelRequest->quantity,
+                    ]);
+                }
 
-            if($validated["status"] === "released" && ($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated")){
-                $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type));
-
-                $allowance->update([
-                    "used" => $allowance->used + $fuelRequest->quantity,
+                DB::commit();
+    
+                return response()->json([
+                    "message" => "Updated Successfully"
                 ]);
             }
 
-            return response()->json([
-                "message" => "Updated Successfully"
-            ]);
+        } catch (\Exception $e){
+            DB::rollBack();
+
+            throw $e;
         }
+
     }
 
     public function scanRequest(Request $request){

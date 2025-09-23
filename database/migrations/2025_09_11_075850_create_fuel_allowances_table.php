@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('fuel_allowances', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("employeeid");
-            $table->date('week_start'); // monday
+            $table->timestamp('week_start'); // monday
             $table->decimal('allowance', 8, 2); // 8 liters
             $table->decimal('carried_over', 8, 2)->default(0);
             $table->decimal('used', 8, 2)->default(0);

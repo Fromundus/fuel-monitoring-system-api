@@ -6,11 +6,14 @@ return [
         'frequency' => 'weekly',
     ],
     '4t2t' => [
-        'amount' => 2.00,
+        'amount' => 1.00,
         'frequency' => 'bi-monthly',
     ],
     'bfluid' => [
         'amount' => 1.00,
         'frequency' => 'quarterly',
+    ],
+    'trip-ticket-allowance' => [
+        'milestone' => 10,
     ],
 ];
