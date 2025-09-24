@@ -70,7 +70,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         Route::post('/scan/request', [RequestController::class, 'scanRequest']);
         
         //ACTIVE EMPLOYEES FROM THE MAIN SERVER
+        Route::get('/employeeswithbalance', [EmployeeController::class, 'withFuelBalance']);
         Route::get('/employees', [EmployeeController::class, 'index']);
+        Route::get('/employees/{employeeid}', [EmployeeController::class, 'show']);
         Route::get('/vehicles', [VehicleController::class, 'index']);
 
         //employee and vehicles
@@ -82,9 +84,6 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::put('/changepassword/{id}', [UserController::class, 'changePassword']);
 });
 
-Route::get('/employeeswithbalance', [EmployeeController::class, 'withFuelBalance']);
-
-
 Route::get('/barangays', [BarangayController::class, 'index']);
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -93,10 +92,4 @@ Route::get('/test', function(){
     return response()->json([
         "message" => "success"
     ], 200);
-});
-
-Route::get('/currentfuelbalance/{id}', function($id){
-    $currentBalance = EmployeeService::getCurrentBalance($id);
-
-    return response($currentBalance);
 });

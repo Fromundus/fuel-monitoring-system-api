@@ -32,6 +32,29 @@ class EmployeeService
         );
     }
 
+    public static function fetchActiveEmployee(int $employeeid){
+        return DB::connection('mysql2')
+            ->table('employment_setup as es')
+            ->leftJoin('employee as e', 'es.employeeid', '=', 'e.employeeid')
+            ->where('es.employment_code', function ($q) {
+                $q->select(DB::raw('MAX(sub.employment_code)'))
+                ->from('employment_setup as sub')
+                ->whereColumn('sub.employeeid', 'es.employeeid')
+                ->where('sub.isServiceRec', 0);
+            })
+            ->where('e.employeeid', $employeeid)
+            ->select(
+            'e.*', 
+            'es.activation_status', 
+            'es.employment_code', 
+            'es.dept_code', 
+            'es.emp_status', 
+            'es.WithUndertime', 
+            'es.desig_position',
+            'es.div_code'
+            )->first();
+    }
+
     public static function fetchEmployeeWithBalances()
     {
         return DB::connection('mysql2')
@@ -194,7 +217,7 @@ class EmployeeService
     }
 
     public static function milestone(){
-        $milestone = Config::get('fuel_allowances.trip-ticket-allowance.milestone', 5000);
+        $milestone = 5000;
         return $milestone;
     }
 

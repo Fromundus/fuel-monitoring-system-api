@@ -13,7 +13,7 @@ return [
         'amount' => 1.00,
         'frequency' => 'quarterly',
     ],
-    'trip-ticket-allowance' => [
-        'milestone' => 10,
-    ],
+    // 'trip-ticket-allowance' => [
+    //     'milestone' => 10,
+    // ],
 ];

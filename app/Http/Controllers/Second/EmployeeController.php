@@ -81,4 +81,16 @@ class EmployeeController extends Controller
         ]
     ]);
     }
+
+    public function show($employeeid){
+        $employee = EmployeeService::fetchActiveEmployee($employeeid);
+
+        if($employee){
+            return response()->json([
+                "data" => new EmployeeWithBalanceResource($employee),
+            ], 200);
+        } else {
+            return response()->json(["message" => "Employee Not Found"], 404);
+        }
+    }
 }
