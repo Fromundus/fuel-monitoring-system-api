@@ -187,9 +187,9 @@ class EmployeeService
 
         return [
             'distance_since_last' => $distance,
-            'milestone'           => $milestone,
             'remaining'           => $remaining,
             'reached'             => $reached,
+            // 'milestone'           => $milestone,
         ];
     }
 
