@@ -125,6 +125,18 @@ class EmployeeService
         return $totalDistance;
     }
 
+    public static function getTotalFuelConsumed(int $employeeid){
+        $fuelRequests = FuelRequest::where('employeeid', $employeeid)->where('status', 'released')->get();
+
+        $totalFuelConsumed = 0;
+
+        foreach ($fuelRequests as $request) {
+            $totalFuelConsumed += $request->quantity ?? 0;
+        }
+
+        return $totalFuelConsumed;
+    }
+
     public static function checkTripTicketAllowance(int $employeeid): void
     {
         $milestone = self::milestone();

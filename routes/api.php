@@ -4,6 +4,7 @@ use App\Exports\RegisteredMembersExport;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarangayController;
 use App\Http\Controllers\Api\BarangayDistanceController;
+use App\Http\Controllers\Api\EmployeeOverviewController;
 use App\Http\Controllers\Api\FuelTypeController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MemberController;
@@ -77,6 +78,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
 
         //employee and vehicles
         Route::get('/request-data', [SecondController::class, 'requestData']);
+
+        //EmployeeOverview
+        Route::get('/employee-overview/{id}', [EmployeeOverviewController::class, 'index']);
     });
     
     //USER ACCOUNTS
