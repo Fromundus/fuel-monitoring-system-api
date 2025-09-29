@@ -103,4 +103,55 @@ class EmployeeOverviewController extends Controller
             "years" => $years,
         ], 200);
     }
+
+    // public function employeeRequests(Request $request, int $employeeid){
+    //     $totalRequests = ModelsRequest::where("employeeid", $employeeid)->get();
+
+    //     $total = $totalRequests->count();
+    //     $allowance = $totalRequests->where('type', 'allowance')->count();
+    //     $tripTicket = $totalRequests->where('type', 'trip-ticket')->count();
+    //     $delegated = $totalRequests->where('type', 'delegated')->count();
+    //     $emergency = $totalRequests->where('type', 'emergency')->count();
+
+    //     $perPage = $request->input('per_page', 20);
+    //     $page = $request->input('page', 1);
+
+    //     $requests = ModelsRequest::where('employeeid', $employeeid)->orderBy('created_at', 'desc')->paginate($perPage, ['*'], $page);
+
+    //     return response()->json([
+    //         "data" => $requests,
+    //         "total" => $total,
+    //         "allowance" => $allowance,
+    //         "tripTicket" => $tripTicket,
+    //         "delegated" => $delegated,
+    //         "emergency" => $emergency,
+    //     ]);
+    // }
+
+    public function employeeRequests(Request $request, int $employeeid)
+    {
+        $totalRequests = ModelsRequest::where("employeeid", $employeeid)->get();
+
+        $total = $totalRequests->count();
+        $allowance = $totalRequests->where('type', 'allowance')->count();
+        $tripTicket = $totalRequests->where('type', 'trip-ticket')->count();
+        $delegated = $totalRequests->where('type', 'delegated')->count();
+        $emergency = $totalRequests->where('type', 'emergency')->count();
+
+        $perPage = $request->input('per_page', 20);
+        $page = $request->input('page', 1);
+
+        $requests = ModelsRequest::where('employeeid', $employeeid)
+        ->orderBy('created_at', 'desc')
+        ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            "data" => $requests,
+            "total" => $total,
+            "allowance" => $allowance,
+            "tripTicket" => $tripTicket,
+            "delegated" => $delegated,
+            "emergency" => $emergency,
+        ]);
+    }
 }

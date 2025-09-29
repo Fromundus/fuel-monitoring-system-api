@@ -80,7 +80,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         Route::get('/request-data', [SecondController::class, 'requestData']);
 
         //EmployeeOverview
-        Route::get('/employee-overview/{id}', [EmployeeOverviewController::class, 'index']);
+        Route::get('/employee/overview/{id}', [EmployeeOverviewController::class, 'index']);
+        Route::get('/employee/requests/{id}', [EmployeeOverviewController::class, 'employeeRequests']);
     });
     
     //USER ACCOUNTS
