@@ -7,6 +7,7 @@ use App\Models\Barangay;
 use App\Models\Request as ModelsRequest;
 use App\Models\TripTicket;
 use App\Models\TripTicketRow;
+use App\Services\ActivityLogger;
 use App\Services\EmployeeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -222,6 +223,11 @@ class RequestController extends Controller
                     
                 }
             }
+
+            ActivityLogger::log([
+                'action' => 'created',
+                'request' => $fuelRequest
+            ]);
             
             DB::commit();
             
