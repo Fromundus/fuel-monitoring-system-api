@@ -16,8 +16,8 @@ return new class extends Migration
             $table->integer("employeeid");
             $table->string("requested_by");
 
-            $table->integer("delegatedtoid");
-            $table->string("delegated_to"); // supervisor or manager
+            $table->integer("delegatedtoid")->nullable();
+            $table->string("delegated_to")->nullable();
 
             $table->string("department");
             $table->string("division")->nullable();

@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Barangay;
+use App\Models\FuelType;
+use App\Models\Inventory;
 use App\Models\Setting;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -40,5 +43,63 @@ class DatabaseSeeder extends Seeder
             'role' => 'superadmin',
         ]);
 
+        FuelType::factory()->create([
+            'name' => 'Gasoline',
+            'unit' => 'Liters',
+            'unit_short' => 'L',
+        ]);
+
+        Inventory::factory()->create([
+            'fuel_type_id' => 1,
+            'quantity' => 0,
+        ]);
+
+        FuelType::factory()->create([
+            'name' => 'Diesel',
+            'unit' => 'Liters',
+            'unit_short' => 'L',
+        ]);
+
+        Inventory::factory()->create([
+            'fuel_type_id' => 2,
+            'quantity' => 0,
+        ]);
+
+        FuelType::factory()->create([
+            'name' => '4T',
+            'unit' => 'Liters',
+            'unit_short' => 'L',
+        ]);
+
+        Inventory::factory()->create([
+            'fuel_type_id' => 3,
+            'quantity' => 0,
+        ]);
+
+        FuelType::factory()->create([
+            'name' => '2T',
+            'unit' => 'Liters',
+            'unit_short' => 'L',
+        ]);
+
+        Inventory::factory()->create([
+            'fuel_type_id' => 4,
+            'quantity' => 0,
+        ]);
+
+        FuelType::factory()->create([
+            'name' => 'B-fluid',
+            'unit' => 'Liters',
+            'unit_short' => 'L',
+        ]);
+
+        Inventory::factory()->create([
+            'fuel_type_id' => 5,
+            'quantity' => 0,
+        ]);
+
+        $this->call([
+            BarangaySeeder::class,
+        ]);
     }
 }
