@@ -229,7 +229,7 @@ class EmployeeService
     }
 
     public static function milestone(){
-        $milestone = 5000;
+        $milestone = 50;
         return $milestone;
     }
 

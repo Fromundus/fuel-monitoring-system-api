@@ -246,40 +246,84 @@ class RequestController extends Controller
 
     public function updateStatus(Request $request, $id){
         $validated = $request->validate([
-            "status" => "required|string|in:pending,approved,rejected,released,cancelled"
+            "status" => "required|string|in:pending,approved,rejected,released,cancelled,undo"
         ]);
 
         try {
             DB::beginTransaction();
 
             $fuelRequest = ModelsRequest::findOrFail($id);
+            $fuelRequestBeforeUpdate = ModelsRequest::findOr($id);
     
             if($fuelRequest){
-                $fuelRequest->update([
-                    "status" => $validated["status"],
-                ]);
-    
-                if($validated["status"] === "released" && ($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated")){
-                    $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type));
-    
-                    $allowance->update([
-                        "used" => $allowance->used + $fuelRequest->quantity,
+                if($validated["status"] !== "undo"){
+                    $fuelRequest->update([
+                        "status" => $validated["status"],
                     ]);
                 }
     
-                if ($validated["status"] === "released" && $fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "gasoline-diesel") {
-                    EmployeeService::checkTripTicketAllowance($fuelRequest->employeeid);
-                } else if ($validated["status"] === "released" && $fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "4t2t") {
-                    $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, 'trip-ticket-allowance');
+                // FOR ALLOWANCE AND DELEGATED 
+                if($validated["status"] === "released"){
+                    if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
+                        $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type));
+        
+                        $allowance->update([
+                            "used" => $allowance->used + $fuelRequest->quantity,
+                        ]);
+                    } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "gasoline-diesel"){
+                        EmployeeService::checkTripTicketAllowance($fuelRequest->employeeid);
+                        //THIS IS FOR CHECKING IF THE EMPLOYEE REACHED THE MILESTONE, IF IT REACHED THE MILESTONE, IT WILL ADD QUANTITY - THIS IS FOR 4T2T - ALSO DECLARED AS TRIPTICKET-ALLOWANCE
+                    } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "4t2t"){
+                        $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, 'trip-ticket-allowance');
+        
+                        $allowance->update([
+                            "used" => $allowance->used + $fuelRequest->quantity,
+                        ]);
+
+                    }
+                }
+                
+                if($validated["status"] === "released") {
+                    //PUT THE MINUS LOGIC HERE
+                    //if the status is released, it should subtract from the current balance from the main items - warehousing
+                    //base the minus logic on the item id from the warehousing
+                }
+                
+                if ($validated["status"] === "undo"){
+
+                    if($fuelRequestBeforeUpdate["status"] === "released"){
+                        //PUT THE ADD LOGIC HERE
+                        //if the request status before undoing is released, it should add back the quantity subtracted to the current balance from the main items - warehousing
     
-                    $allowance->update([
-                        "used" => $allowance->used + $fuelRequest->quantity,
-                    ]);
+                        if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
+                            $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type));
+        
+                            $allowance->update([
+                                "used" => $allowance->used - $fuelRequest->quantity,
+                            ]);
+                        } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "4t2t"){
+                            $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, 'trip-ticket-allowance');
+        
+                            $allowance->update([
+                                "used" => $allowance->used - $fuelRequest->quantity,
+                            ]);
+                        }
+
+                        $fuelRequest->update([
+                            "status" => "approved",
+                        ]);
+
+                    } else if ($fuelRequestBeforeUpdate["status"] === "rejected" || $fuelRequestBeforeUpdate["status"] === "cancelled" || $fuelRequestBeforeUpdate["status"] === "approved"){
+                        $fuelRequest->update([
+                            "status" => "pending",
+                        ]);
+                    }
                 }
 
                 ActivityLogger::log([
                     'action' => $validated['status'],
-                    'request' => $fuelRequest
+                    'request' => $fuelRequest,
+                    'requestBeforeUpdate' => $fuelRequestBeforeUpdate,
                 ]);
 
                 DB::commit();

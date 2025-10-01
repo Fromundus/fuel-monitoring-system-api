@@ -2,7 +2,7 @@
 
 return [
     'gasoline-diesel' => [
-        'amount' => 10.00,
+        'amount' => 8.00,
         'frequency' => 'weekly',
     ],
     '4t2t' => [

@@ -11,6 +11,8 @@ class ActivityLogger
     {
         $request = $data["request"];
 
+        $requestBeforeUpdate = $data["requestBeforeUpdate"] ?? null;
+
         $description = '';
 
         $employee = EmployeeService::fetchActiveEmployee(employeeid: $request->employeeid); 
@@ -27,6 +29,16 @@ class ActivityLogger
             $description = auth()->user()->name . ' cancelled the request ' . $request->reference_number . '.';
         } else if ($data['action'] === "released"){
             $description = 'Request ' . $request->reference_number . ' was released by ' . auth()->user()->name . ' — ' . $request->quantity . ' ' . $request->unit . ' ' . $request->fuel_type . '.';
+        } else if ($data['action'] === "undo"){
+            if($requestBeforeUpdate["status"] === "released"){
+                $description = auth()->user()->name . " undid the release of {$request->quantity} {$request->unit} {$request->fuel_type} for request {$request->reference_number}. Inventory restored.";
+            } else if($requestBeforeUpdate["status"] === "approved"){
+                $description = "Approval for request {$request->reference_number} was revoked by " . auth()->user()->name . ". Status set back to pending.";
+            } else if($requestBeforeUpdate["status"] === "rejected"){
+                $description = "Rejection for request {$request->reference_number} was revoked by " . auth()->user()->name . ". Status set back to pending.";
+            } else if($requestBeforeUpdate["status"] === "cancelled"){
+                $description = "Cancellation for request {$request->reference_number} was revoked by " . auth()->user()->name . ". Status set back to pending.";
+            }
         }
 
         return ActivityLog::create([
