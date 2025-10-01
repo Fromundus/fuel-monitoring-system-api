@@ -83,6 +83,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         //EmployeeOverview
         Route::get('/employee/overview/{id}', [EmployeeOverviewController::class, 'index']);
         Route::get('/employee/requests/{id}', [EmployeeOverviewController::class, 'employeeRequests']);
+        Route::get('/employee/activity-logs/{id}', [EmployeeOverviewController::class, 'employeeActivityLogs']);
 
         //ACTIVITY LOGS
         Route::get('/activity-logs', [ActivityLogController::class, 'index']);

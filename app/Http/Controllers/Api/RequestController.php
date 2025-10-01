@@ -23,7 +23,7 @@ class RequestController extends Controller
         $type = $request->query('type');
         $status = $request->query('status');
 
-        $query = ModelsRequest::query()->with("tripTickets.rows");
+        $query = ModelsRequest::query()->with(["tripTickets.rows", "logs"]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -58,7 +58,7 @@ class RequestController extends Controller
     }
 
     public function show($id){
-        $request = ModelsRequest::with("tripTickets.rows")->findOrFail($id);
+        $request = ModelsRequest::with(["tripTickets.rows", "logs"])->findOrFail($id);
         $barangays = Barangay::all();
         
         return response()->json([

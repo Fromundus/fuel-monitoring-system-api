@@ -59,7 +59,8 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
+            'employeeid' => "required|unique:users,employeeid",
             'username' => ['required', 'string', 'lowercase', 'unique:'.User::class],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
@@ -67,12 +68,13 @@ class UserController extends Controller
         ]);
 
         $user = User::create([
-            'username' => $request->username,
-            'name' => $request->name,
-            'email' => $request->email,
+            'employeeid' => $validated["employeeid"],
+            'username' => $validated["username"],
+            'name' => $validated["name"],
+            'email' => $validated["email"],
             'password' => Hash::make(1234),
             'email_verified_at' => Carbon::now(),
-            'role' => $request->role,
+            'role' => $validated["role"],
         ]);
 
         // $user->notify(new VerifyEmailNotification());

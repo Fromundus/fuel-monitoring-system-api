@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Request as ModelsRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -153,5 +154,17 @@ class EmployeeOverviewController extends Controller
             "delegated" => $delegated,
             "emergency" => $emergency,
         ]);
+    }
+
+    public function employeeActivityLogs(Request $request, int $employeeid){
+        $perPage = $request->input('per_page', 20);
+        $page = $request->input('page', 1);
+
+        $activityLogs = ActivityLog::where("employee_id", $employeeid)->orderBy('created_at', 'desc')
+        ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            "data" => $activityLogs
+        ], 200);
     }
 }

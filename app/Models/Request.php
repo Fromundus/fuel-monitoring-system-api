@@ -45,4 +45,8 @@ class Request extends Model
     public function tripTickets(){
         return $this->hasMany(TripTicket::class);
     }
+
+    public function logs(){
+        return $this->hasMany(ActivityLog::class);
+    }
 }

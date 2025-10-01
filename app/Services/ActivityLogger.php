@@ -15,16 +15,18 @@ class ActivityLogger
 
         $employee = EmployeeService::fetchActiveEmployee(employeeid: $request->employeeid); 
 
+        // $employee->firstname . $employee->middlename . ' ' . $employee->lastname . ' ' . $employee->suffix
+
         if($data['action'] === "created"){
-            $description = $employee->firstname . $employee->middlename . ' ' . $employee->lastname . ' ' . $employee->suffix . ' created a new request with reference number ' . $request->reference_number . '.';
+            $description = auth()->user()->name . ' created a new request with reference number ' . $request->reference_number . '.';
         } else if ($data['action'] === "approved"){
-            $description = auth()->user()->username . ' approved the request ' . $request->reference_number . '.';
+            $description = auth()->user()->name . ' approved the request ' . $request->reference_number . '.';
         } else if ($data['action'] === "rejected"){
-            $description = auth()->user()->username . ' rejected the request ' . $request->reference_number . '.';
+            $description = auth()->user()->name . ' rejected the request ' . $request->reference_number . '.';
         } else if ($data['action'] === "cancelled"){
-            $description = auth()->user()->username . ' cancelled the request ' . $request->reference_number . '.';
+            $description = auth()->user()->name . ' cancelled the request ' . $request->reference_number . '.';
         } else if ($data['action'] === "released"){
-            $description = 'Request ' . $request->reference_number . ' was released by ' . auth()->user()->username . ' — ' . $request->quantity . ' ' . $request->unit . ' ' . $request->fuel_type . '.';
+            $description = 'Request ' . $request->reference_number . ' was released by ' . auth()->user()->name . ' — ' . $request->quantity . ' ' . $request->unit . ' ' . $request->fuel_type . '.';
         }
 
         return ActivityLog::create([
