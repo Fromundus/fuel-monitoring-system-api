@@ -277,6 +277,11 @@ class RequestController extends Controller
                     ]);
                 }
 
+                ActivityLogger::log([
+                    'action' => $validated['status'],
+                    'request' => $fuelRequest
+                ]);
+
                 DB::commit();
     
                 return response()->json([

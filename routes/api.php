@@ -1,6 +1,7 @@
 <?php
 
 use App\Exports\RegisteredMembersExport;
+use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarangayController;
 use App\Http\Controllers\Api\BarangayDistanceController;
@@ -82,6 +83,9 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         //EmployeeOverview
         Route::get('/employee/overview/{id}', [EmployeeOverviewController::class, 'index']);
         Route::get('/employee/requests/{id}', [EmployeeOverviewController::class, 'employeeRequests']);
+
+        //ACTIVITY LOGS
+        Route::get('/activity-logs', [ActivityLogController::class, 'index']);
     });
     
     //USER ACCOUNTS
