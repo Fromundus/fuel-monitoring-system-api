@@ -7,6 +7,7 @@ use App\Models\Request as FuelRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeService
 {
@@ -183,6 +184,57 @@ class EmployeeService
                     'advanced'     => $advanced,
                     'type'         => 'trip-ticket-allowance',
                 ]);
+            }
+        }
+    }
+
+    public static function recalculateTripTicketAllowance(int $employeeid): void
+    {
+        $milestone = self::milestone();
+
+        // Recompute distance
+        $totalDistance = self::getTotalDistanceTravelled($employeeid);
+
+        Log::info($totalDistance);
+
+        // Expected milestones based on distance
+        $expectedMilestones = floor($totalDistance / $milestone);
+
+        // Current allowances
+        $existingAllowances = FuelAllowance::where('employeeid', $employeeid)
+            ->where('type', 'trip-ticket-allowance')
+            ->orderBy('id')
+            ->get();
+
+        $existingCount = $existingAllowances->count();
+
+        // ✅ Case 1: Add missing allowances (like your current function)
+        if ($expectedMilestones > $existingCount) {
+            self::checkTripTicketAllowance($employeeid);
+        }
+
+        // ✅ Case 2: Remove excess allowances
+        if ($expectedMilestones < $existingCount) {
+            $toRemove = $existingCount - $expectedMilestones;
+
+            // Get allowances from newest to oldest
+            $extraAllowances = $existingAllowances->sortByDesc('id')->take($toRemove);
+
+            Log::info($extraAllowances);
+
+            foreach ($extraAllowances as $allowance) {
+                // If allowance is unused, safe to delete
+                if ($allowance->used == 0 && $allowance->advanced == 0) {
+                    $allowance->delete();
+                } else {
+                    // ⚠️ If already used, mark it revoked (for audit trail)
+                    Log::info("test");
+
+                    // put the - NEGATIVE LOGIC HERE
+                    $allowance->update([
+                        'advanced' => $allowance->used,
+                    ]);
+                }
             }
         }
     }
