@@ -9,13 +9,15 @@ class ActivityLogger
 {
     public static function log(array $data): ActivityLog
     {
-        $request = $data["request"];
+        $request = $data["request"] ?? null;
 
         $requestBeforeUpdate = $data["requestBeforeUpdate"] ?? null;
 
-        $description = '';
+        $description = null;
 
-        $employee = EmployeeService::fetchActiveEmployee(employeeid: $request->employeeid); 
+        $employeeid = $request->employeeid ?? $data["employeeid"];
+
+        $employee = EmployeeService::fetchActiveEmployee(employeeid: $employeeid); 
 
         // $employee->firstname . $employee->middlename . ' ' . $employee->lastname . ' ' . $employee->suffix
 
@@ -42,16 +44,16 @@ class ActivityLogger
         }
 
         return ActivityLog::create([
-            'request_id'       => $request->id,
+            'request_id'       => $request->id ?? null,
             'user_id'          => auth()->id() ?? null,
-            'employee_id'      => $request->employeeid ?? null,
+            'employee_id'      => $data["employeeid"] ?? $request->employeeid ?? null,
             'action'           => $data['action'],
-            'description'      => $description ?? null,
-            'item_id'          => $request->fuel_type_id ?? null,
-            'item_name'        => $request->fuel_type ?? null,
-            'item_unit'        => $request->unit ?? null,
-            'quantity'         => $request->quantity ?? null,
-            'reference_number' => $request->reference_number ?? null,
+            'description'      => $data["description"] ?? $description ?? null,
+            'item_id'          => $data["item_id"] ?? $request->fuel_type_id ?? null,
+            'item_name'        => $data["item_name"] ?? $request->fuel_type ?? null,
+            'item_unit'        => $data["item_unit"] ?? $request->unit ?? null,
+            'quantity'         => $data["quantity"] ?? $request->quantity ?? null,
+            'reference_number' => $data["reference_number"] ?? $request->reference_number ?? null,
             'reference_type'   => 'FR',
         ]);
     }

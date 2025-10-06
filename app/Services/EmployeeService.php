@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AllowanceTransaction;
 use App\Models\FuelAllowance;
 use App\Models\Request as FuelRequest;
 use Carbon\Carbon;
@@ -83,28 +84,28 @@ class EmployeeService
             );
     }
 
-    public static function getLatestBalance(int $employeeId, string $type){
-        // $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("week_start")->first();
-        $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("id")->first();
+    // public static function getLatestBalance(int $employeeId, string $type){
+    //     // $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("week_start")->first();
+    //     $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("id")->first();
 
-        return $allowance;
-    }
+    //     return $allowance;
+    // }
 
-    public static function getCurrentBalance(int $employeeId, string $type): float
-    {
-        $allowance = EmployeeService::getLatestBalance($employeeId, $type);
+    // public static function getCurrentBalance(int $employeeId, string $type): float
+    // {
+    //     $allowance = EmployeeService::getLatestBalance($employeeId, $type);
 
-        if (!$allowance) {
-            return 0.0; // No allowance exists yet
-        }
+    //     if (!$allowance) {
+    //         return 0.0; // No allowance exists yet
+    //     }
 
-        // Total available = allowance + carried_over - used - advanced
-        $balance = ($allowance->allowance + $allowance->carried_over)
-                 - $allowance->used
-                 - $allowance->advanced;
+    //     // Total available = allowance + carried_over - used - advanced
+    //     $balance = ($allowance->allowance + $allowance->carried_over)
+    //              - $allowance->used
+    //              - $allowance->advanced;
 
-        return $balance; // Prevent negative balances
-    }
+    //     return $balance; // Prevent negative balances
+    // }
 
     public static function getTotalDistanceTravelled(int $employeeid)
     {
@@ -239,22 +240,67 @@ class EmployeeService
         }
     }
 
+    // public static function getDistanceSinceLastIssue(int $employeeid): array
+    // {
+    //     $milestone = self::milestone();
+
+    //     // Get the last trip-ticket allowance
+    //     $lastAllowance = FuelAllowance::where('employeeid', $employeeid)
+    //         ->where('type', 'trip-ticket-allowance')->where('used', '>', 0)
+    //         ->orderByDesc('id')
+    //         ->first();
+
+    //     $query = FuelRequest::where('employeeid', $employeeid)
+    //         ->where('type', 'trip-ticket')
+    //         ->where('status', 'released')
+    //         ->with('tripTickets.rows');
+
+    //     if ($lastAllowance) {
+    //         $query->where('created_at', '>', $lastAllowance->updated_at);
+    //     }
+
+    //     $fuelRequests = $query->get();
+
+    //     $distance = 0;
+    //     foreach ($fuelRequests as $request) {
+    //         foreach ($request->tripTickets as $ticket) {
+    //             foreach ($ticket->rows as $row) {
+    //                 $distance += $row->distance ?? 0;
+    //             }
+    //         }
+    //     }
+
+    //     // Calculate milestone progress
+    //     $remaining = max($milestone - $distance, 0);
+    //     $reached = $distance >= $milestone;
+
+    //     return [
+    //         'distance_since_last' => $distance,
+    //         'remaining'           => $remaining,
+    //         'reached'             => $reached,
+    //         // 'milestone'           => $milestone,
+    //     ];
+    // }
+
     public static function getDistanceSinceLastIssue(int $employeeid): array
     {
         $milestone = self::milestone();
 
-        // Get the last trip-ticket allowance
-        $lastAllowance = FuelAllowance::where('employeeid', $employeeid)
-            ->where('type', 'trip-ticket-allowance')->where('used', '>', 0)
+        // Get the last "use" transaction for trip-ticket
+        $lastUse = AllowanceTransaction::where('employeeid', $employeeid)
+            ->where('type', 'trip-ticket')
+            ->where('tx_type', 'use')
             ->orderByDesc('id')
             ->first();
 
         $query = FuelRequest::where('employeeid', $employeeid)
             ->where('type', 'trip-ticket')
+            ->where('status', 'released')
             ->with('tripTickets.rows');
 
-        if ($lastAllowance) {
-            $query->where('created_at', '>', $lastAllowance->updated_at);
+        if ($lastUse) {
+            // Only consider requests after the last usage
+            $query->where('updated_at', '>', $lastUse->created_at);
         }
 
         $fuelRequests = $query->get();
@@ -276,9 +322,10 @@ class EmployeeService
             'distance_since_last' => $distance,
             'remaining'           => $remaining,
             'reached'             => $reached,
-            // 'milestone'           => $milestone,
+            // 'milestone'        => $milestone, // uncomment if needed
         ];
     }
+
 
     public static function milestone(){
         $milestone = 50;

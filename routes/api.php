@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Second\EmployeeController;
 use App\Http\Controllers\Second\SecondController;
 use App\Http\Controllers\Second\VehicleController;
+use App\Services\AllowanceService;
 use App\Services\EmployeeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -100,6 +101,15 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::get('/test', function(){
     return response()->json([
+        "message" => "success"
+    ], 200);
+});
+
+Route::get('/balance/{employeeid}', function($employeeid){
+    $balance = AllowanceService::getBalance($employeeid, 'b-fluid');
+
+    return response()->json([
+        "data" => $balance,
         "message" => "success"
     ], 200);
 });

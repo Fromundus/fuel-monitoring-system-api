@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId("request_id")->constrained()->cascadeOnDelete();
+            $table->foreignId("request_id")->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId("user_id")->nullable()->constrained("users")->nullOnDelete(); // who performed the action
             $table->unsignedBigInteger("employee_id");
             

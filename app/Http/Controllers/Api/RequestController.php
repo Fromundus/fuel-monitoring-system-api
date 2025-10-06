@@ -8,7 +8,9 @@ use App\Models\Request as ModelsRequest;
 use App\Models\TripTicket;
 use App\Models\TripTicketRow;
 use App\Services\ActivityLogger;
+use App\Services\AllowanceService;
 use App\Services\EmployeeService;
+use App\Services\MilestoneAllowanceService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -112,7 +114,7 @@ class RequestController extends Controller
                 ]);
 
                 //4T AND 2T OF TRIP TICKETS IS SAVED AS TRIP-TICKET-ALLOWANCE IN TYPE IN THE FUEL_ALLOWANCES TABLE
-                $currentBalance = EmployeeService::getCurrentBalance($request->employeeid, "trip-ticket-allowance");
+                $currentBalance = AllowanceService::getBalance($request->employeeid, "trip-ticket");
 
                 if($request->quantity > $currentBalance){
                     throw ValidationException::withMessages([
@@ -136,7 +138,7 @@ class RequestController extends Controller
                 "source" => "required|string",
             ]);
 
-            $currentBalance = EmployeeService::getCurrentBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
+            $currentBalance = AllowanceService::getBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
 
             if($request->quantity > $currentBalance){
                 throw ValidationException::withMessages([
@@ -161,7 +163,7 @@ class RequestController extends Controller
                 "source" => "required|string",
             ]);
 
-            $currentBalance = EmployeeService::getCurrentBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
+            $currentBalance = AllowanceService::getBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
 
             if($request->quantity > $currentBalance){
                 throw ValidationException::withMessages([
@@ -286,11 +288,8 @@ class RequestController extends Controller
                         )
                     ){
                         //4T AND 2T OF TRIP TICKETS IS SAVED AS TRIP-TICKET-ALLOWANCE IN TYPE IN THE FUEL_ALLOWANCES TABLE
-                        $currentBalance = EmployeeService::getCurrentBalance($fuelRequestBeforeUpdate->employeeid,
-                        $fuelRequestBeforeUpdate->type === "trip-ticket" && ($fuelRequestBeforeUpdate->fuel_type === "4T" || $fuelRequestBeforeUpdate->fuel_type === "2T") ? "trip-ticket-allowance" : $this->getAllowanceType($fuelRequestBeforeUpdate->fuel_type));
-
-                        Log::info($fuelRequestBeforeUpdate->fuel_type);
-                        Log::info($currentBalance);
+                        $currentBalance = AllowanceService::getBalance($fuelRequestBeforeUpdate->employeeid,
+                        $fuelRequestBeforeUpdate->type === "trip-ticket" && ($fuelRequestBeforeUpdate->fuel_type === "4T" || $fuelRequestBeforeUpdate->fuel_type === "2T") ? "trip-ticket" : $this->getAllowanceType($fuelRequestBeforeUpdate->fuel_type));
                         
                         if($fuelRequestBeforeUpdate->quantity > $currentBalance){
                             throw ValidationException::withMessages([
@@ -307,22 +306,17 @@ class RequestController extends Controller
                 // FOR ALLOWANCE AND DELEGATED
                 if($validated["status"] === "released"){
                     if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
-                        $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type));
-        
-                        $allowance->update([
-                            "used" => $allowance->used + $fuelRequest->quantity,
-                        ]);
-                    } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "4t2t"){
-                        $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, 'trip-ticket-allowance');
-        
-                        $allowance->update([
-                            "used" => $allowance->used + $fuelRequest->quantity,
-                        ]);
+
+                        AllowanceService::use($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type), $fuelRequest->quantity, $fuelRequest->id);
+
+                    } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "2t4t"){
+
+                        MilestoneAllowanceService::releaseFuel($fuelRequest->employeeid, $fuelRequest->quantity, "fuel-request:{$fuelRequest->id}");
 
                     } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "gasoline-diesel"){
-                        EmployeeService::checkTripTicketAllowance($fuelRequest->employeeid);
 
-                        //THIS IS FOR CHECKING IF THE EMPLOYEE REACHED THE MILESTONE, IF IT REACHED THE MILESTONE, IT WILL ADD QUANTITY - THIS IS FOR 4T2T - ALSO DECLARED AS TRIPTICKET-ALLOWANCE
+                        MilestoneAllowanceService::calculateMilestone($fuelRequest->employeeid);
+                        //THIS IS FOR CHECKING IF THE EMPLOYEE REACHED THE MILESTONE, IF IT REACHED THE MILESTONE, IT WILL ADD QUANTITY - THIS IS FOR 2t4t - ALSO DECLARED AS TRIPTICKET-ALLOWANCE
                     }
                 }
                 
@@ -343,19 +337,16 @@ class RequestController extends Controller
                         ]);
     
                         if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
-                            $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type));
-        
-                            $allowance->update([
-                                "used" => $allowance->used - $fuelRequest->quantity,
-                            ]);
-                        } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "4t2t"){
-                            $allowance = EmployeeService::getLatestBalance($fuelRequest->employeeid, 'trip-ticket-allowance');
-        
-                            $allowance->update([
-                                "used" => $allowance->used - $fuelRequest->quantity,
-                            ]);
+
+                            AllowanceService::undo($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type), $fuelRequest->quantity, $fuelRequest->id);
+
+                        } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "2t4t"){
+
+                            // AllowanceService::undo($fuelRequest->employeeid, 'trip-ticket', $fuelRequest->quantity, $fuelRequest->id);
+                            MilestoneAllowanceService::undoFuelRelease($fuelRequest->employeeid, "fuel-request:{$fuelRequest->id}");
+
                         } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "gasoline-diesel"){
-                            EmployeeService::recalculateTripTicketAllowance($fuelRequest->employeeid);
+                            MilestoneAllowanceService::calculateMilestone($fuelRequest->employeeid);
                         }
 
                     } else if ($fuelRequestBeforeUpdate["status"] === "rejected" || $fuelRequestBeforeUpdate["status"] === "cancelled" || $fuelRequestBeforeUpdate["status"] === "approved"){
@@ -427,7 +418,7 @@ class RequestController extends Controller
         if($type === "Diesel" || $type === "Gasoline"){
             $fuelType = 'gasoline-diesel';
         } else if ($type === "4T" || $type === "2T"){
-            $fuelType = '4t2t';
+            $fuelType = '2t4t';
         } else if ($type === "B-fluid"){
             $fuelType = 'bfluid';
         }
