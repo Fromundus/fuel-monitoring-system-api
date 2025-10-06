@@ -27,9 +27,24 @@ class InventoryController extends Controller
 
         $inventories = $query->orderBy('id', 'desc')->paginate($perPage);
 
+        $counts = FuelType::with(['inventory:id,fuel_type_id,quantity'])
+        ->whereIn('name', ['Gasoline', 'Diesel', '4T', '2T', 'B-fluid'])
+        ->get()
+        ->mapWithKeys(function ($fuelType) {
+            return [
+                $fuelType->name => [
+                    'id' => $fuelType->id,
+                    'name' => $fuelType->name,
+                    'quantity' => $fuelType->inventory->quantity ?? 0,
+                    'unit' => $fuelType->unit_short,
+                ]
+            ];
+        });
+
         return response()->json([
             'inventories' => $inventories,
             "fuelTypes" => $fuelTypes,
+            'counts' => $counts,
         ]);
     }
 

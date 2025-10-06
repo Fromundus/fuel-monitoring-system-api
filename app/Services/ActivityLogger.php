@@ -41,7 +41,46 @@ class ActivityLogger
             } else if($requestBeforeUpdate["status"] === "cancelled"){
                 $description = "Cancellation for request {$request->reference_number} was revoked by " . auth()->user()->name . ". Status set back to pending.";
             }
+        } else if ($data['action'] === "update") {
+            $before = $data['before'] ?? [];
+            $after  = $data['after'] ?? [];
+
+            $changes = [];
+
+            // Fields you want to ignore in comparison
+            $ignoredFields = [
+                'updated_at',
+                'created_at',
+                'reference_number',
+                'id',
+                'date'
+            ];
+
+            foreach ($after as $field => $newValue) {
+                if (in_array($field, $ignoredFields)) {
+                    continue; // skip system fields
+                }
+
+                $oldValue = $before[$field] ?? null;
+
+                // Compare values only if they differ (strict enough to avoid type issues)
+                if ($oldValue != $newValue) {
+                    $changes[] = ucfirst(str_replace('_', ' ', $field)) .
+                        " changed from '{$oldValue}' to '{$newValue}'";
+                }
+            }
+
+            if (count($changes) > 0) {
+                $description = auth()->user()->name .
+                    ' updated request ' . $request->reference_number . ' — ' .
+                    implode('; ', $changes) . '.';
+            } else {
+                $description = auth()->user()->name .
+                    ' updated request ' . $request->reference_number . ' (no major changes detected).';
+            }
         }
+
+        //update action
 
         return ActivityLog::create([
             'request_id'       => $request->id ?? null,

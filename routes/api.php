@@ -66,6 +66,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
             Route::get('/', [RequestController::class, 'index']);
             Route::get('/{id}', [RequestController::class, 'show']);
             Route::post('/', [RequestController::class, 'store']);
+            Route::put('/update/{id}', [RequestController::class, 'update']);
             Route::put('/{id}', [RequestController::class, 'updateStatus']);
             Route::delete('/', [RequestController::class, 'delete']);
         });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\EmployeeWithBalanceResource;
 use App\Models\Barangay;
 use App\Models\Request as ModelsRequest;
 use App\Models\TripTicket;
@@ -64,10 +65,14 @@ class RequestController extends Controller
     public function show($id){
         $request = ModelsRequest::with(["tripTickets.rows", "logs"])->findOrFail($id);
         $barangays = Barangay::all();
+        $employee = EmployeeService::fetchActiveEmployee($request->employeeid);
+
+        $employeeData = new EmployeeWithBalanceResource($employee);
         
         return response()->json([
             "data" => $request,
             "barangays" => $barangays,
+            "employee_data" => $employeeData,
         ]);
     }
     
@@ -265,6 +270,215 @@ class RequestController extends Controller
 
     }
 
+    public function update(Request $request, $id){
+        $type = $request->type;
+
+        if($type === "trip-ticket"){
+            if($request->fuel_type === "Gasoline" || $request->fuel_type === "Diesel"){
+                $request->validate([
+                    "employeeid" => "required|integer",
+                    "requested_by" => "required|string",
+                    "department" => "required|string",
+                    "division" => "nullable|string",
+                    "plate_number" => "nullable|string",
+                    "purpose" => "required|string|max:255",
+                    "quantity" => "required|numeric|min:1",
+                    "unit" => "required|string",
+                    "fuel_type_id" => "required|string",
+                    "fuel_type" => "required|string",
+                    "type" => "required|string",
+                    "source" => "required|string",
+        
+                    "tripTickets"                  => "required|array|min:1",
+                    "tripTickets.*.departure"      => "required|string",
+                    "tripTickets.*.destination"    => "required|string",
+                    "tripTickets.*.distance"       => "required|numeric|min:1",
+                    "tripTickets.*.quantity"       => "required|numeric|min:0",
+                    "tripTickets.*.date"           => "required|date|before_or_equal:today",
+                ]);
+            } else if ($request->fuel_type === "4T" || $request->fuel_type === "2T") {
+                $request->validate([
+                    "employeeid" => "required|integer",
+                    "requested_by" => "required|string",
+                    "department" => "required|string",
+                    "division" => "nullable|string",
+                    "plate_number" => "nullable|string",
+                    "purpose" => "required|string|max:255",
+                    "quantity" => "required|numeric|min:1",
+                    "unit" => "required|string",
+                    "fuel_type_id" => "required|string",
+                    "fuel_type" => "required|string",
+                    "type" => "required|string",
+                    "source" => "required|string",
+                ]);
+
+                //4T AND 2T OF TRIP TICKETS IS SAVED AS TRIP-TICKET-ALLOWANCE IN TYPE IN THE FUEL_ALLOWANCES TABLE
+                $currentBalance = AllowanceService::getBalance($request->employeeid, "trip-ticket");
+
+                if($request->quantity > $currentBalance){
+                    throw ValidationException::withMessages([
+                        'balance' => ["Insufficient Balance. Please reload the page."],
+                    ]);
+                }
+            }
+        } else if ($type === "allowance") {
+            $request->validate([
+                "employeeid" => "required|integer",
+                "requested_by" => "required|string",
+                "department" => "required|string",
+                "division" => "nullable|string",
+                "plate_number" => "nullable|string",
+                "purpose" => "required|string|max:255",
+                "quantity" => "required|numeric|min:1",
+                "unit" => "required|string",
+                "fuel_type_id" => "required|string",
+                "fuel_type" => "required|string",
+                "type" => "required|string",
+                "source" => "required|string",
+            ]);
+
+            $currentBalance = AllowanceService::getBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
+
+            if($request->quantity > $currentBalance){
+                throw ValidationException::withMessages([
+                    'balance' => ["Insufficient Balance. Please reload the page."],
+                ]);
+            }
+        } else if ($type === "delegated"){
+            $request->validate([
+                "employeeid" => "required|integer",
+                "requested_by" => "required|string",
+                "delegatedtoid" => "required|integer",
+                "delegated_to" => "required|string",
+                "department" => "required|string",
+                "division" => "nullable|string",
+                "plate_number" => "nullable|string",
+                "purpose" => "required|string|max:255",
+                "quantity" => "required|numeric|min:1",
+                "unit" => "required|string",
+                "fuel_type_id" => "required|string",
+                "fuel_type" => "required|string",
+                "type" => "required|string",
+                "source" => "required|string",
+            ]);
+
+            $currentBalance = AllowanceService::getBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
+
+            if($request->quantity > $currentBalance){
+                throw ValidationException::withMessages([
+                    'balance' => ["Insufficient Balance. Please reload the page."],
+                ]);
+            }
+        } else if ($type === "emergency"){
+            $request->validate([
+                "employeeid" => "required|integer",
+                "requested_by" => "required|string",
+                "department" => "required|string",
+                "division" => "nullable|string",
+                "plate_number" => "nullable|string",
+                "purpose" => "required|string|max:255",
+                "quantity" => "required|numeric|min:1",
+                "unit" => "required|string",
+                "fuel_type_id" => "required|string",
+                "fuel_type" => "required|string",
+                "type" => "required|string",
+                "source" => "required|string",
+            ]);
+        }
+
+        try {
+
+            DB::beginTransaction();
+
+            $fuelRequest = ModelsRequest::findOrFail($id);
+            $fuelRequestBeforeUpdate = clone $fuelRequest;
+
+            $fuelRequest->update([
+                "employeeid" => $request->employeeid,
+                "requested_by" => $request->requested_by,
+
+                "delegatedtoid" => $type === "delegated" ? $request->delegatedtoid : null,
+                "delegated_to" => $type === "delegated" ? $request->delegated_to : null,
+
+                "department" => $request->department,
+
+                "division" => $request->division ?? null,
+
+                "plate_number" => $request->plate_number ?? null,
+                "purpose" => $request->purpose,
+                "quantity" => $request->quantity,
+                "unit" => $request->unit,
+                "fuel_type_id" => $request->fuel_type_id,
+                "fuel_type" => $request->fuel_type,
+                "type" => $request->type,
+
+                "source" => $request->source,
+            ]);
+
+
+            if($fuelRequest && $type === "trip-ticket"){
+                $tripTicket = TripTicket::where("request_id", $fuelRequest->id)->first();
+
+                if ($tripTicket) {
+                    // Remove all old trip ticket rows first
+                    TripTicketRow::where("trip_ticket_id", $tripTicket->id)->delete();
+
+                    // Update base trip ticket info
+                    $tripTicket->update([
+                        "plate_number" => $fuelRequest->plate_number ?? null,
+                        "driver" => $fuelRequest->requested_by,
+                        "date" => Carbon::now(),
+                    ]);
+                } else {
+                    // If no trip ticket exists yet, create a new one
+                    $tripTicket = TripTicket::create([
+                        "request_id" => $fuelRequest->id,
+                        "plate_number" => $fuelRequest->plate_number ?? null,
+                        "driver" => $fuelRequest->requested_by,
+                        "date" => Carbon::now(),
+                    ]);
+                }
+
+                // ✅ Save new trip ticket rows
+                if ($request->tripTickets && count($request->tripTickets) > 0) {
+                    foreach ($request->tripTickets as $item) {
+                        TripTicketRow::create([
+                            "trip_ticket_id" => $tripTicket->id,
+                            "departure" => $item["departure"],
+                            "destination" => $item["destination"],
+                            "distance" => $item["distance"],
+                            "quantity" => $item["quantity"],
+                            "date" => $item["date"],
+                        ]);
+                    }
+                }
+            }
+
+            $changed = $fuelRequest->getChanges();
+            $before = collect($changed)->mapWithKeys(fn($v, $k) => [$k => $fuelRequestBeforeUpdate->$k])->toArray();
+
+            ActivityLogger::log([
+                'action' => 'update',
+                'request' => $fuelRequest,
+                'before' => $before,
+                'after' => $changed,
+            ]);
+            
+            DB::commit();
+            
+            return response()->json([
+                "data" => $fuelRequest,
+                "message" => "Request Successfully Updated", 
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            throw $e;
+        }
+
+    }
+
     public function updateStatus(Request $request, $id){
         $validated = $request->validate([
             "status" => "required|string|in:pending,approved,rejected,released,cancelled,undo"
@@ -274,7 +488,7 @@ class RequestController extends Controller
             DB::beginTransaction();
 
             $fuelRequest = ModelsRequest::findOrFail($id);
-            $fuelRequestBeforeUpdate = ModelsRequest::findOr($id);
+            $fuelRequestBeforeUpdate = clone $fuelRequest;
 
             if($fuelRequest){
                 if($validated["status"] !== "undo"){

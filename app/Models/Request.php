@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Http\Resources\EmployeeWithBalanceResource;
+use App\Services\EmployeeService;
 use Illuminate\Database\Eloquent\Model;
 
 class Request extends Model
