@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ActivityLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarangayController;
 use App\Http\Controllers\Api\BarangayDistanceController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmployeeOverviewController;
 use App\Http\Controllers\Api\FuelTypeController;
 use App\Http\Controllers\Api\InventoryController;
@@ -29,6 +30,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
 
     
     Route::middleware('admin')->group(function(){
+        Route::prefix('/dashboard')->group(function(){
+           Route::get('/admin', [DashboardController::class, 'admin']); 
+        });
+        
         Route::prefix('/users')->group(function(){
             Route::get('/', [UserController::class, 'index']);
             Route::post('/', [UserController::class, 'store']);
