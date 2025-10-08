@@ -46,7 +46,7 @@ return new class extends Migration
 
             $table->date('date');
 
-            $table->string("reference_number");
+            $table->string("reference_number")->unique();
             $table->timestamps();
         });
     }
