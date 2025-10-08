@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Warehousing\ItemResource;
 use App\Models\ActivityLog;
 use App\Models\Inventory;
 use App\Models\Request as ModelsRequest;
+use App\Models\Warehousing\Item;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -138,7 +140,9 @@ class DashboardController extends Controller
             }
         }
 
-        $inventories = Inventory::with('fuelType')->get();
+        $inventories = Item::where('InventoryTypeID', 5)->with('unit')->get();
+
+        
         $recentRequests = ModelsRequest::orderByDesc('id')->take(5)->get();
         $recentLogs = ActivityLog::orderByDesc('id')->take(5)->get();
 
@@ -235,7 +239,7 @@ class DashboardController extends Controller
 
         return response()->json([
             "counts" => $counts,
-            'inventories' => $inventories,
+            'inventories' => ItemResource::collection($inventories),
             'recent_requests' => $recentRequests,
             'recent_logs' => $recentLogs,
             'employee_usage' => $employeeUsage,

@@ -3,48 +3,58 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Warehousing\ItemResource;
 use App\Models\FuelType;
 use App\Models\Inventory;
+use App\Models\Warehousing\Item;
 use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
-    public function index(Request $request)
-    {
-        $search = $request->query('search');
-        $perPage = $request->query('per_page', 10);
+    // public function index(Request $request)
+    // {
+    //     $search = $request->query('search');
+    //     $perPage = $request->query('per_page', 10);
 
-        $query = Inventory::query()->with("fuelType");
-        $fuelTypes = FuelType::all();
+    //     $query = Inventory::query()->with("fuelType");
+    //     $fuelTypes = FuelType::all();
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('fuelType', function($q2) use ($search) {
-                    $q2->where('name', 'like', "%{$search}%");
-                });
-            });
-        }
+    //     if ($search) {
+    //         $query->where(function ($q) use ($search) {
+    //             $q->whereHas('fuelType', function($q2) use ($search) {
+    //                 $q2->where('name', 'like', "%{$search}%");
+    //             });
+    //         });
+    //     }
 
-        $inventories = $query->orderBy('id', 'desc')->paginate($perPage);
+    //     $inventories = $query->orderBy('id', 'desc')->paginate($perPage);
 
-        $counts = FuelType::with(['inventory:id,fuel_type_id,quantity'])
-        ->whereIn('name', ['Gasoline', 'Diesel', '4T', '2T', 'B-fluid'])
-        ->get()
-        ->mapWithKeys(function ($fuelType) {
-            return [
-                $fuelType->name => [
-                    'id' => $fuelType->id,
-                    'name' => $fuelType->name,
-                    'quantity' => $fuelType->inventory->quantity ?? 0,
-                    'unit' => $fuelType->unit_short,
-                ]
-            ];
-        });
+    //     $counts = FuelType::with(['inventory:id,fuel_type_id,quantity'])
+    //     ->whereIn('name', ['Gasoline', 'Diesel', '4T', '2T', 'B-fluid'])
+    //     ->get()
+    //     ->mapWithKeys(function ($fuelType) {
+    //         return [
+    //             $fuelType->name => [
+    //                 'id' => $fuelType->id,
+    //                 'name' => $fuelType->name,
+    //                 'quantity' => $fuelType->inventory->quantity ?? 0,
+    //                 'unit' => $fuelType->unit_short,
+    //             ]
+    //         ];
+    //     });
+
+    //     return response()->json([
+    //         'inventories' => $inventories,
+    //         "fuelTypes" => $fuelTypes,
+    //         'counts' => $counts,
+    //     ]);
+    // }
+
+    public function index(){
+        $inventories = Item::where('InventoryTypeID', 5)->with('unit')->get();
 
         return response()->json([
-            'inventories' => $inventories,
-            "fuelTypes" => $fuelTypes,
-            'counts' => $counts,
+            'inventories' => ItemResource::collection($inventories),
         ]);
     }
 

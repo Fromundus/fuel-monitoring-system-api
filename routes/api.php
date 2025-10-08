@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Second\EmployeeController;
 use App\Http\Controllers\Second\SecondController;
 use App\Http\Controllers\Second\VehicleController;
+use App\Models\Warehousing\Item;
 use App\Services\AllowanceService;
 use App\Services\EmployeeService;
 use Illuminate\Http\Request;
@@ -119,3 +120,5 @@ Route::get('/balance/{employeeid}', function($employeeid){
         "message" => "success"
     ], 200);
 });
+
+Route::get('/test/inventories', [InventoryController::class, 'index']);
