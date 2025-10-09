@@ -23,9 +23,16 @@ class EmployeeWithBalanceResource extends JsonResource
         $latest_fuel_period = AllowanceService::getLatestGrantedBalanceRow($this->employeeid, 'gasoline-diesel');
         $latest_oil_period = AllowanceService::getLatestGrantedBalanceRow($this->employeeid, '2t4t');
         $latest_fluid_period = AllowanceService::getLatestGrantedBalanceRow($this->employeeid, 'b-fluid');
+
+        $isManagerial = (
+            $this->WithUndertime === "N" ||
+            stripos($this->desig_position, 'manager') !== false ||
+            stripos($this->desig_position, 'supervisor') !== false
+        );
         
         return [
-            // "WithUndertime" => $this->WithUndertime,
+            "WithUndertime" => $this->WithUndertime,
+            "desig_position" => $this->desig_position,
             // "activation_status" => $this->activation_status,
             // "allow_bid" => $this->allow_bid,
             // "birthdate" => $this->birthdate,
@@ -64,6 +71,8 @@ class EmployeeWithBalanceResource extends JsonResource
             "current_oil_tripticket_balance" => AllowanceService::getBalance($this->employeeid, 'trip-ticket'),
 
             "distance_travelled_since_last" => EmployeeService::getDistanceSinceLastIssue($this->employeeid),
+
+            "isManagerial" => $isManagerial,
         ];
     }
 }

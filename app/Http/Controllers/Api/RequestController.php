@@ -8,8 +8,11 @@ use App\Models\Barangay;
 use App\Models\Request as ModelsRequest;
 use App\Models\TripTicket;
 use App\Models\TripTicketRow;
+use App\Models\Warehousing\Item;
+use App\Models\Warehousing\TransactionWarehousing;
 use App\Services\ActivityLogger;
 use App\Services\AllowanceService;
+use App\Services\BalanceWarehouseService;
 use App\Services\EmployeeService;
 use App\Services\MilestoneAllowanceService;
 use Carbon\Carbon;
@@ -78,6 +81,14 @@ class RequestController extends Controller
     
     public function store(Request $request){
         $type = $request->type;
+
+        $itemBalance = BalanceWarehouseService::getItemBalance($request->fuel_type_id);
+
+        if($request->quantity > $itemBalance){
+            throw ValidationException::withMessages([
+                'balance' => ["Insufficient stock. Only {$itemBalance} left in inventory."],
+            ]);
+        }
 
         if($type === "trip-ticket"){
             if($request->fuel_type === "Gasoline" || $request->fuel_type === "Diesel"){
@@ -272,6 +283,14 @@ class RequestController extends Controller
 
     public function update(Request $request, $id){
         $type = $request->type;
+
+        $itemBalance = BalanceWarehouseService::getItemBalance($request->fuel_type_id);
+
+        if($request->quantity > $itemBalance){
+            throw ValidationException::withMessages([
+                'balance' => ["Insufficient stock. Only {$itemBalance} left in inventory."],
+            ]);
+        }
 
         if($type === "trip-ticket"){
             if($request->fuel_type === "Gasoline" || $request->fuel_type === "Diesel"){
@@ -492,23 +511,28 @@ class RequestController extends Controller
 
             if($fuelRequest){
                 if($validated["status"] !== "undo"){
-
-                    if(
-                        ($validated["status"] === "approved" || $validated["status"] === "released") &&
-                        (
-                            ($fuelRequestBeforeUpdate->type === "trip-ticket" && ($fuelRequestBeforeUpdate->fuel_type === "4T" || $fuelRequestBeforeUpdate->fuel_type === "2T")) ||
-                            $fuelRequestBeforeUpdate->type === "allowance" ||
-                            $fuelRequestBeforeUpdate->type === "delegated"
-                        )
-                    ){
-                        //4T AND 2T OF TRIP TICKETS IS SAVED AS TRIP-TICKET-ALLOWANCE IN TYPE IN THE FUEL_ALLOWANCES TABLE
-                        $currentBalance = AllowanceService::getBalance($fuelRequestBeforeUpdate->employeeid,
-                        $fuelRequestBeforeUpdate->type === "trip-ticket" && ($fuelRequestBeforeUpdate->fuel_type === "4T" || $fuelRequestBeforeUpdate->fuel_type === "2T") ? "trip-ticket" : $this->getAllowanceType($fuelRequestBeforeUpdate->fuel_type));
+                    
+                    
+                    if($validated["status"] === "approved" || $validated["status"] === "released"){
                         
-                        if($fuelRequestBeforeUpdate->quantity > $currentBalance){
+                        $itemBalance = BalanceWarehouseService::getItemBalance($fuelRequest->fuel_type_id);
+    
+                        if($fuelRequest->quantity > $itemBalance){
                             throw ValidationException::withMessages([
-                                'balance' => ["Insufficient Balance. Cancel or reject this request."],
+                                'balance' => ["Insufficient stock. Only {$itemBalance} left in inventory."],
                             ]);
+                        }
+                        
+                        if(($fuelRequestBeforeUpdate->type === "trip-ticket" && ($fuelRequestBeforeUpdate->fuel_type === "4T" || $fuelRequestBeforeUpdate->fuel_type === "2T")) || $fuelRequestBeforeUpdate->type === "allowance" || $fuelRequestBeforeUpdate->type === "delegated"){
+                            //4T AND 2T OF TRIP TICKETS IS SAVED AS TRIP-TICKET-ALLOWANCE IN TYPE IN THE FUEL_ALLOWANCES TABLE
+                            $currentBalance = AllowanceService::getBalance($fuelRequestBeforeUpdate->employeeid,
+                            $fuelRequestBeforeUpdate->type === "trip-ticket" && ($fuelRequestBeforeUpdate->fuel_type === "4T" || $fuelRequestBeforeUpdate->fuel_type === "2T") ? "trip-ticket" : $this->getAllowanceType($fuelRequestBeforeUpdate->fuel_type));
+                            
+                            if($fuelRequestBeforeUpdate->quantity > $currentBalance){
+                                throw ValidationException::withMessages([
+                                    'balance' => ["Insufficient Balance."],
+                                ]);
+                            }
                         }
                     }
 
@@ -519,6 +543,28 @@ class RequestController extends Controller
     
                 // FOR ALLOWANCE AND DELEGATED
                 if($validated["status"] === "released"){
+                    //PUT THE MINUS LOGIC HERE
+                    //if the status is released, it should subtract from the current balance from the main items - warehousing
+                    //base the minus logic on the item id from the warehousing
+
+                    $itemWarehousing = Item::where('id', $fuelRequest->fuel_type_id)->first();
+
+                    if($itemWarehousing){
+                        $itemWarehousing->update([
+                            'QuantityOnHand' => $itemWarehousing->QuantityOnHand - $fuelRequest->quantity,
+                        ]);
+
+                        TransactionWarehousing::create([
+                            'ItemID' => $fuelRequest->fuel_type_id,
+                            'ReferenceNo' => $fuelRequest->reference_number,
+                            'ReferenceType' => 'FMS',
+                            'TransactionType' => 'OUT',
+                            'Quantity' => -$fuelRequest->quantity,
+                            'CreatedBy' => $request->user()->name,
+                            'CreatedOn' => now(),
+                        ]);
+                    }
+
                     if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
 
                         AllowanceService::use($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type), $fuelRequest->quantity, $fuelRequest->id);
@@ -534,17 +580,29 @@ class RequestController extends Controller
                     }
                 }
                 
-                if($validated["status"] === "released") {
-                    //PUT THE MINUS LOGIC HERE
-                    //if the status is released, it should subtract from the current balance from the main items - warehousing
-                    //base the minus logic on the item id from the warehousing
-                }
-                
                 if ($validated["status"] === "undo"){
 
                     if($fuelRequestBeforeUpdate["status"] === "released"){
                         //PUT THE ADD LOGIC HERE
                         //if the request status before undoing is released, it should add back the quantity subtracted to the current balance from the main items - warehousing
+
+                        $itemWarehousing = Item::where('id', $fuelRequest->fuel_type_id)->first();
+
+                        if($itemWarehousing){
+                            $itemWarehousing->update([
+                                'QuantityOnHand' => $itemWarehousing->QuantityOnHand + $fuelRequest->quantity,
+                            ]);
+
+                            TransactionWarehousing::create([
+                                'ItemID' => $fuelRequest->fuel_type_id,
+                                'ReferenceNo' => $fuelRequest->reference_number,
+                                'ReferenceType' => 'FMS',
+                                'TransactionType' => 'IN',
+                                'Quantity' => $fuelRequest->quantity,
+                                'CreatedBy' => $request->user()->name,
+                                'CreatedOn' => now(),
+                            ]);
+                        }
 
                         $fuelRequest->update([
                             "status" => "approved",

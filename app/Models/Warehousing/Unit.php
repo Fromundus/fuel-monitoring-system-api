@@ -9,6 +9,8 @@ class Unit extends Model
     protected $connection = 'mysql3';
     protected $table = 'unit';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'id',
         'unitCode',

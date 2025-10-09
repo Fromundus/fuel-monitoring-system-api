@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -48,7 +49,7 @@ class UserController extends Controller
             'total'      => User::count(),
             'superadmin' => User::where('role', 'superadmin')->count(),
             'admin'      => User::where('role', 'admin')->count(),
-            'driver'       => User::where('role', 'driver')->count(),
+            'user'       => User::where('role', 'user')->count(),
         ];
 
         return response()->json([
@@ -57,27 +58,53 @@ class UserController extends Controller
         ]);
     }
 
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'employeeid' => "required|unique:users,employeeid",
+    //         'username' => ['required', 'string', 'lowercase', 'unique:'.User::class],
+    //         'name' => ['required', 'string', 'max:255'],
+    //         'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+    //         'role' => ['required', 'string'],
+    //     ]);
+
+    //     User::create([
+    //         'employeeid' => $validated["employeeid"],
+    //         'username' => $validated["username"],
+    //         'name' => $validated["name"],
+    //         'email' => $validated["email"],
+    //         'password' => Hash::make(1234),
+    //         'email_verified_at' => Carbon::now(),
+    //         'role' => $validated["role"],
+    //     ]);
+
+    //     return response()->noContent();
+    // }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'employeeid' => "required|unique:users,employeeid",
+            'employeeid' => [
+                'required',
+                Rule::unique('users')->where(function ($query) use ($request) {
+                    return $query->where('role', $request->role);
+                }),
+            ],
             'username' => ['required', 'string', 'lowercase', 'unique:'.User::class],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'role' => ['required', 'string'],
         ]);
 
-        $user = User::create([
-            'employeeid' => $validated["employeeid"],
-            'username' => $validated["username"],
-            'name' => $validated["name"],
-            'email' => $validated["email"],
+        User::create([
+            'employeeid' => $validated['employeeid'],
+            'username' => $validated['username'],
+            'name' => $validated['name'],
+            'email' => $validated['email'],
             'password' => Hash::make(1234),
-            'email_verified_at' => Carbon::now(),
-            'role' => $validated["role"],
+            'email_verified_at' => now(),
+            'role' => $validated['role'],
         ]);
-
-        // $user->notify(new VerifyEmailNotification());
 
         return response()->noContent();
     }

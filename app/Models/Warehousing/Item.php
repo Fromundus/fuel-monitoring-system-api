@@ -9,6 +9,8 @@ class Item extends Model
     protected $connection = 'mysql3';
     protected $table = 'items';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'id',
         'InventoryTypeID',

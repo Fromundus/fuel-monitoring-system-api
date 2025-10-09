@@ -29,11 +29,40 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    Route::prefix('/dashboard')->group(function(){
+       Route::get('/admin', [DashboardController::class, 'admin']); 
+       Route::get('/user/{id}', [DashboardController::class, 'user']); 
+    });
     
+    Route::prefix('/inventories')->group(function(){
+        Route::get('/', [InventoryController::class, 'index']);
+        Route::post('/', [InventoryController::class, 'store']);
+        Route::get('/{id}', [InventoryController::class, 'show']);
+        Route::put('/', [InventoryController::class, 'update']);
+        Route::delete('/', [InventoryController::class, 'destroy']);
+    });
+    
+    //REQUESTS
+    Route::prefix('/requests')->group(function(){
+        Route::get('/', [RequestController::class, 'index']);
+        Route::get('/{id}', [RequestController::class, 'show']);
+        Route::post('/', [RequestController::class, 'store']);
+        Route::put('/update/{id}', [RequestController::class, 'update']);
+        Route::put('/{id}', [RequestController::class, 'updateStatus']);
+        Route::delete('/', [RequestController::class, 'delete']);
+    });
+    
+    //ACTIVE EMPLOYEES FROM THE MAIN SERVER
+    Route::get('/employeeswithbalance', [EmployeeController::class, 'withFuelBalance']);
+    Route::get('/employees', [EmployeeController::class, 'index']);
+    Route::get('/employees/{employeeid}', [EmployeeController::class, 'show']);
+    Route::get('/vehicles', [VehicleController::class, 'index']);
+
+    //BARANGAYS
+    Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
+    Route::post('/distances', [BarangayDistanceController::class, 'getDistances']);
+
     Route::middleware('admin')->group(function(){
-        Route::prefix('/dashboard')->group(function(){
-           Route::get('/admin', [DashboardController::class, 'admin']); 
-        });
         
         Route::prefix('/users')->group(function(){
             Route::get('/', [UserController::class, 'index']);
@@ -55,35 +84,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
             Route::delete('/', [FuelTypeController::class, 'destroy']);
         });
 
-        Route::prefix('/inventories')->group(function(){
-            Route::get('/', [InventoryController::class, 'index']);
-            Route::post('/', [InventoryController::class, 'store']);
-            Route::get('/{id}', [InventoryController::class, 'show']);
-            Route::put('/', [InventoryController::class, 'update']);
-            Route::delete('/', [InventoryController::class, 'destroy']);
-        });
-
-        //BARANGAYS
-        Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
-        Route::post('/distances', [BarangayDistanceController::class, 'getDistances']);
-
-        //REQUESTS
-        Route::prefix('/requests')->group(function(){
-            Route::get('/', [RequestController::class, 'index']);
-            Route::get('/{id}', [RequestController::class, 'show']);
-            Route::post('/', [RequestController::class, 'store']);
-            Route::put('/update/{id}', [RequestController::class, 'update']);
-            Route::put('/{id}', [RequestController::class, 'updateStatus']);
-            Route::delete('/', [RequestController::class, 'delete']);
-        });
-
         Route::post('/scan/request', [RequestController::class, 'scanRequest']);
-        
-        //ACTIVE EMPLOYEES FROM THE MAIN SERVER
-        Route::get('/employeeswithbalance', [EmployeeController::class, 'withFuelBalance']);
-        Route::get('/employees', [EmployeeController::class, 'index']);
-        Route::get('/employees/{employeeid}', [EmployeeController::class, 'show']);
-        Route::get('/vehicles', [VehicleController::class, 'index']);
 
         //employee and vehicles
         Route::get('/request-data', [SecondController::class, 'requestData']);

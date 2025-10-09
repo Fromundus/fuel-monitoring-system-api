@@ -84,6 +84,34 @@ class EmployeeService
             );
     }
 
+    public static function fetchEmployeeWithBalance(int $employeeid)
+    {
+        return DB::connection('mysql2')
+            ->table('employment_setup as es')
+            ->leftJoin('employee as e', 'es.employeeid', '=', 'e.employeeid')
+            ->where('es.employment_code', function ($q) {
+                $q->select(DB::raw('MAX(sub.employment_code)'))
+                    ->from('employment_setup as sub')
+                    ->whereColumn('sub.employeeid', 'es.employeeid')
+                    ->where('sub.isServiceRec', 0);
+            })
+            ->where(function ($q) {
+                $q->where("es.WithUndertime", "N")
+                  ->orWhere("es.desig_position", 'like', '%Manager%');
+            })
+            ->where('e.employeeid', $employeeid)
+            ->select(
+                'e.*',
+                'es.activation_status',
+                'es.employment_code',
+                'es.dept_code',
+                'es.emp_status',
+                'es.WithUndertime',
+                'es.desig_position',
+                'es.div_code'
+            )->first();
+    }
+
     // public static function getLatestBalance(int $employeeId, string $type){
     //     // $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("week_start")->first();
     //     $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("id")->first();

@@ -9,6 +9,8 @@ class TransactionWarehousing extends Model
     protected $connection = 'mysql3';
     protected $table = 'transactions';
 
+    public $timestamps = false;
+
     protected $fillable = [
         'id',
         'ItemID',
