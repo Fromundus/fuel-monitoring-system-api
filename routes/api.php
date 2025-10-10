@@ -51,6 +51,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         Route::put('/{id}', [RequestController::class, 'updateStatus']);
         Route::delete('/', [RequestController::class, 'delete']);
     });
+
+    //EmployeeOverview  
+    Route::get('/employee/overview/{id}', [EmployeeOverviewController::class, 'index']);
+    Route::get('/employee/requests/{id}', [EmployeeOverviewController::class, 'employeeRequests']);
+    Route::get('/employee/activity-logs/{id}', [EmployeeOverviewController::class, 'employeeActivityLogs']);
     
     //ACTIVE EMPLOYEES FROM THE MAIN SERVER
     Route::get('/employeeswithbalance', [EmployeeController::class, 'withFuelBalance']);
@@ -88,11 +93,6 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
 
         //employee and vehicles
         Route::get('/request-data', [SecondController::class, 'requestData']);
-
-        //EmployeeOverview
-        Route::get('/employee/overview/{id}', [EmployeeOverviewController::class, 'index']);
-        Route::get('/employee/requests/{id}', [EmployeeOverviewController::class, 'employeeRequests']);
-        Route::get('/employee/activity-logs/{id}', [EmployeeOverviewController::class, 'employeeActivityLogs']);
 
         //ACTIVITY LOGS
         Route::get('/activity-logs', [ActivityLogController::class, 'index']);

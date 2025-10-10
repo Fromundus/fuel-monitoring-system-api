@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Services\EmployeeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Log;
 
 class UserResource extends JsonResource
 {
@@ -16,16 +17,18 @@ class UserResource extends JsonResource
     public function toArray(Request $request): array
     {
         $employee = null;
+        $isManagerial = null;
 
         if($this->employeeid){
             $employee = EmployeeService::fetchActiveEmployee($this->employeeid);
+
+            $isManagerial = (
+                $employee->WithUndertime === "N" ||
+                stripos($employee->desig_position, 'manager') !== false ||
+                stripos($employee->desig_position, 'supervisor') !== false
+            );
         }
 
-        $isManagerial = (
-            $employee->WithUndertime === "N" ||
-            stripos($employee->desig_position, 'manager') !== false ||
-            stripos($employee->desig_position, 'supervisor') !== false
-        );
 
         return [
             "created_at" => $this->created_at,
@@ -38,15 +41,15 @@ class UserResource extends JsonResource
             "status" => $this->status,
             "updated_at" => $this->updated_at,
             "username" => $this->username,
-            "WithUndertime" => $employee->WithUndertime,
-            "desig_position" => $employee->desig_position,
-            "dept_code" => $employee->dept_code,
-            "div_code" => $employee->div_code,
-            "firstname" => $employee->firstname,
-            "gender" => $employee->gender,
-            "lastname" => $employee->lastname,
-            "middlename" => $employee->middlename,
-            "suffix" => $employee->suffix,
+            "WithUndertime" => $employee->WithUndertime ?? null,
+            "desig_position" => $employee->desig_position ?? null,
+            "dept_code" => $employee->dept_code ?? null,
+            "div_code" => $employee->div_code ?? null,
+            "firstname" => $employee->firstname ?? null,
+            "gender" => $employee->gender ?? null,
+            "lastname" => $employee->lastname ?? null,
+            "middlename" => $employee->middlename ?? null,
+            "suffix" => $employee->suffix ?? null,
             "isManagerial" => $isManagerial,
 
         ];

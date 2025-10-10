@@ -70,7 +70,8 @@ class EmployeeService
             })
             ->where(function ($q) {
                 $q->where("es.WithUndertime", "N")
-                  ->orWhere("es.desig_position", 'like', '%Manager%');
+                  ->orWhere("es.desig_position", 'like', '%Manager%')
+                  ->orWhere("es.desig_position", 'like', '%Supervisor%');
             })
             ->select(
                 'e.*',
@@ -97,7 +98,8 @@ class EmployeeService
             })
             ->where(function ($q) {
                 $q->where("es.WithUndertime", "N")
-                  ->orWhere("es.desig_position", 'like', '%Manager%');
+                  ->orWhere("es.desig_position", 'like', '%Manager%')
+                  ->orWhere("es.desig_position", 'like', '%Supervisor%');
             })
             ->where('e.employeeid', $employeeid)
             ->select(
