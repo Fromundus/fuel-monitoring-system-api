@@ -200,6 +200,7 @@ class UserController extends Controller
                 'name' => 'required|string',
                 'role' => 'required|string',
                 'email' => 'required|email|unique:users,email,' . $user->id,
+                "password" => "sometimes|confirmed|string",
             ]);
 
             if ($validator->fails()) {
@@ -212,6 +213,7 @@ class UserController extends Controller
                     "name" => $request->name,
                     "role" => $request->role,
                     "email" => $request->email,
+                    "password" => Hash::make($request->password),
                 ]);
 
                 return response()->json([

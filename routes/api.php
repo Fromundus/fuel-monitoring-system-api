@@ -67,15 +67,16 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
     Route::post('/distances', [BarangayDistanceController::class, 'getDistances']);
 
+    Route::prefix('/users')->group(function(){
+        Route::get('/', [UserController::class, 'index']);
+        Route::post('/', [UserController::class, 'store']);
+        Route::get('/{id}', [UserController::class, 'show']);
+        Route::put('/{id}', [UserController::class, 'update']);
+        Route::delete('/', [UserController::class, 'delete']);
+    });
+    
     Route::middleware('admin')->group(function(){
         
-        Route::prefix('/users')->group(function(){
-            Route::get('/', [UserController::class, 'index']);
-            Route::post('/', [UserController::class, 'store']);
-            Route::get('/{id}', [UserController::class, 'show']);
-            Route::put('/{id}', [UserController::class, 'update']);
-            Route::delete('/', [UserController::class, 'delete']);
-        });
         
         Route::put('/update-role', [UserController::class, 'updateRole']);
         Route::put('/update-status', [UserController::class, 'updateStatus']);
