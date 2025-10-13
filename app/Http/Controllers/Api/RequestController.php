@@ -30,6 +30,7 @@ class RequestController extends Controller
         $perPage = $request->query('per_page', 10);
         $type = $request->query('type');
         $status = $request->query('status');
+        $fuel_type = $request->query('fuel_type');
 
         $query = ModelsRequest::query()->with(["tripTickets.rows", "logs"]);
 
@@ -47,6 +48,10 @@ class RequestController extends Controller
 
         if($status && $status !== 'all'){
             $query->where('status', $status);
+        }
+
+        if($fuel_type && $fuel_type !== 'all'){
+            $query->where('fuel_type', $fuel_type);
         }
 
         $requests = $query->orderBy('id', 'desc')->paginate($perPage);
@@ -81,14 +86,6 @@ class RequestController extends Controller
     
     public function store(Request $request){
         $type = $request->type;
-
-        $itemBalance = BalanceWarehouseService::getItemBalance($request->fuel_type_id);
-
-        if($request->quantity > $itemBalance){
-            throw ValidationException::withMessages([
-                'balance' => ["Insufficient stock. Only {$itemBalance} left in inventory."],
-            ]);
-        }
 
         if($type === "trip-ticket"){
             if($request->fuel_type === "Gasoline" || $request->fuel_type === "Diesel"){
@@ -200,6 +197,14 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
+            ]);
+        }
+
+        $itemBalance = BalanceWarehouseService::getItemBalance($request->fuel_type_id);
+
+        if($request->quantity > $itemBalance){
+            throw ValidationException::withMessages([
+                'balance' => ["Insufficient stock. Only {$itemBalance} left in inventory."],
             ]);
         }
 
@@ -284,14 +289,6 @@ class RequestController extends Controller
     public function update(Request $request, $id){
         $type = $request->type;
 
-        $itemBalance = BalanceWarehouseService::getItemBalance($request->fuel_type_id);
-
-        if($request->quantity > $itemBalance){
-            throw ValidationException::withMessages([
-                'balance' => ["Insufficient stock. Only {$itemBalance} left in inventory."],
-            ]);
-        }
-
         if($type === "trip-ticket"){
             if($request->fuel_type === "Gasoline" || $request->fuel_type === "Diesel"){
                 $request->validate([
@@ -402,6 +399,14 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
+            ]);
+        }
+
+        $itemBalance = BalanceWarehouseService::getItemBalance($request->fuel_type_id);
+
+        if($request->quantity > $itemBalance){
+            throw ValidationException::withMessages([
+                'balance' => ["Insufficient stock. Only {$itemBalance} left in inventory."],
             ]);
         }
 
