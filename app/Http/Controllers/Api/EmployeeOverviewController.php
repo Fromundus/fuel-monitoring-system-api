@@ -7,6 +7,7 @@ use App\Models\ActivityLog;
 use App\Models\Request as ModelsRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Svg\Tag\Rect;
 
 class EmployeeOverviewController extends Controller
@@ -143,6 +144,38 @@ class EmployeeOverviewController extends Controller
         $page = $request->input('page', 1);
 
         $requests = ModelsRequest::where('employeeid', $employeeid)
+        ->orderBy('created_at', 'desc')
+        ->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            "data" => $requests,
+            "total" => $total,
+            "allowance" => $allowance,
+            "tripTicket" => $tripTicket,
+            "delegated" => $delegated,
+            "emergency" => $emergency,
+        ]);
+    }
+
+    public function employeeStatusRequests(Request $request, int $employeeid)
+    {
+        $perPage = $request->input('per_page', 20);
+        $page = $request->input('page', 1);
+        $status = $request->input('status');
+
+        Log::info($status);
+
+        $totalRequests = ModelsRequest::where("employeeid", $employeeid)->get();
+
+        $total = $totalRequests->count();
+        $allowance = $totalRequests->where('type', 'allowance')->count();
+        $tripTicket = $totalRequests->where('type', 'trip-ticket')->count();
+        $delegated = $totalRequests->where('type', 'delegated')->count();
+        $emergency = $totalRequests->where('type', 'emergency')->count();
+
+
+        $requests = ModelsRequest::where('employeeid', $employeeid)
+        ->where("status", $status)
         ->orderBy('created_at', 'desc')
         ->paginate($perPage, ['*'], 'page', $page);
 
