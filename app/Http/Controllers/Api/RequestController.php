@@ -54,7 +54,7 @@ class RequestController extends Controller
             $query->where('fuel_type', $fuel_type);
         }
 
-        $requests = $query->orderBy('id', 'desc')->paginate($perPage);
+        $requests = $query->orderBy('updated_at', 'desc')->paginate($perPage);
 
         $counts = [
             'total'      => ModelsRequest::count(),

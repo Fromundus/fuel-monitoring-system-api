@@ -144,7 +144,7 @@ class EmployeeOverviewController extends Controller
         $page = $request->input('page', 1);
 
         $requests = ModelsRequest::where('employeeid', $employeeid)
-        ->orderBy('created_at', 'desc')
+        ->orderBy('updated_at', 'desc')
         ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
@@ -176,7 +176,7 @@ class EmployeeOverviewController extends Controller
 
         $requests = ModelsRequest::where('employeeid', $employeeid)
         ->where("status", $status)
-        ->orderBy('created_at', 'desc')
+        ->orderBy('updated_at', 'desc')
         ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json([
