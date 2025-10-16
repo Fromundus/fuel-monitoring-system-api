@@ -60,7 +60,7 @@ class DashboardController extends Controller
 
         $inventories = Item::where('InventoryTypeID', 5)->with('unit')->get();
         
-        $recentRequests = ModelsRequest::orderByDesc('id')->take(5)->get();
+        $recentRequests = ModelsRequest::orderByDesc('id')->take(7)->get();
         $recentLogs = ActivityLog::orderByDesc('id')->take(5)->get();
 
         // 🧩 EMPLOYEE USAGE (Top 5 employees)

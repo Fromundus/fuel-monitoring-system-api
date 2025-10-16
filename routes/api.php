@@ -20,6 +20,7 @@ use App\Http\Controllers\Second\VehicleController;
 use App\Models\Warehousing\Item;
 use App\Services\AllowanceService;
 use App\Services\EmployeeService;
+use App\Services\SettingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -125,3 +126,9 @@ Route::get('/balance/{employeeid}', function($employeeid){
 });
 
 Route::get('/test/inventories', [InventoryController::class, 'index']);
+
+Route::get('/test/settings', function(){
+    return response()->json([
+        "data" => SettingService::getLatestSettings(),
+    ]);
+});

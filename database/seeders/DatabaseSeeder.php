@@ -43,60 +43,88 @@ class DatabaseSeeder extends Seeder
             'role' => 'superadmin',
         ]);
 
-        FuelType::factory()->create([
-            'name' => 'Gasoline',
-            'unit' => 'Liters',
-            'unit_short' => 'L',
+        Setting::factory()->create([
+            'key' => 'gasoline-diesel',
+            'value' => '8',
+            'frequency' => 'weekly',
+        ]);
+        
+        Setting::factory()->create([
+            'key' => '2t4t',
+            'value' => '1',
+            'frequency' => 'bi-monthly',
         ]);
 
-        Inventory::factory()->create([
-            'fuel_type_id' => 1,
-            'quantity' => 0,
+        Setting::factory()->create([
+            'key' => 'bfluid',
+            'value' => '1',
+            'frequency' => 'quarterly',
+        ]);
+        
+        Setting::factory()->create([
+            'key' => 'milestone',
+            'value' => '50',
+        ]);
+        
+        Setting::factory()->create([
+            'key' => 'liters_per_milestone',
+            'value' => '1',
         ]);
 
-        FuelType::factory()->create([
-            'name' => 'Diesel',
-            'unit' => 'Liters',
-            'unit_short' => 'L',
-        ]);
+        // FuelType::factory()->create([
+        //     'name' => 'Gasoline',
+        //     'unit' => 'Liters',
+        //     'unit_short' => 'L',
+        // ]);
 
-        Inventory::factory()->create([
-            'fuel_type_id' => 2,
-            'quantity' => 0,
-        ]);
+        // Inventory::factory()->create([
+        //     'fuel_type_id' => 1,
+        //     'quantity' => 0,
+        // ]);
 
-        FuelType::factory()->create([
-            'name' => '4T',
-            'unit' => 'Liters',
-            'unit_short' => 'L',
-        ]);
+        // FuelType::factory()->create([
+        //     'name' => 'Diesel',
+        //     'unit' => 'Liters',
+        //     'unit_short' => 'L',
+        // ]);
 
-        Inventory::factory()->create([
-            'fuel_type_id' => 3,
-            'quantity' => 0,
-        ]);
+        // Inventory::factory()->create([
+        //     'fuel_type_id' => 2,
+        //     'quantity' => 0,
+        // ]);
 
-        FuelType::factory()->create([
-            'name' => '2T',
-            'unit' => 'Liters',
-            'unit_short' => 'L',
-        ]);
+        // FuelType::factory()->create([
+        //     'name' => '4T',
+        //     'unit' => 'Liters',
+        //     'unit_short' => 'L',
+        // ]);
 
-        Inventory::factory()->create([
-            'fuel_type_id' => 4,
-            'quantity' => 0,
-        ]);
+        // Inventory::factory()->create([
+        //     'fuel_type_id' => 3,
+        //     'quantity' => 0,
+        // ]);
 
-        FuelType::factory()->create([
-            'name' => 'B-fluid',
-            'unit' => 'Liters',
-            'unit_short' => 'L',
-        ]);
+        // FuelType::factory()->create([
+        //     'name' => '2T',
+        //     'unit' => 'Liters',
+        //     'unit_short' => 'L',
+        // ]);
 
-        Inventory::factory()->create([
-            'fuel_type_id' => 5,
-            'quantity' => 0,
-        ]);
+        // Inventory::factory()->create([
+        //     'fuel_type_id' => 4,
+        //     'quantity' => 0,
+        // ]);
+
+        // FuelType::factory()->create([
+        //     'name' => 'B-fluid',
+        //     'unit' => 'Liters',
+        //     'unit_short' => 'L',
+        // ]);
+
+        // Inventory::factory()->create([
+        //     'fuel_type_id' => 5,
+        //     'quantity' => 0,
+        // ]);
 
         $this->call([
             BarangaySeeder::class,
