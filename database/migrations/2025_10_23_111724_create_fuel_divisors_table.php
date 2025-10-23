@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('barangays', function (Blueprint $table) {
+        Schema::create('fuel_divisors', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->decimal('lat', 10, 7);
-            $table->decimal('lng', 10, 7);
-            $table->string('municipality')->nullable();
-            $table->unsignedBigInteger('road_distance')->nullable();
+            $table->unsignedBigInteger('vehicle_id');
+            $table->decimal('km_divisor', 8, 2);
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('barangays');
+        Schema::dropIfExists('fuel_divisors');
     }
 };

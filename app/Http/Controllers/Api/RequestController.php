@@ -15,6 +15,7 @@ use App\Services\AllowanceService;
 use App\Services\BalanceWarehouseService;
 use App\Services\EmployeeService;
 use App\Services\MilestoneAllowanceService;
+use App\Services\VehicleService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -94,7 +95,7 @@ class RequestController extends Controller
                     "requested_by" => "required|string",
                     "department" => "required|string",
                     "division" => "nullable|string",
-                    "plate_number" => "nullable|string",
+                    "plate_number" => "required|string",
                     "purpose" => "required|string|max:255",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
@@ -102,7 +103,9 @@ class RequestController extends Controller
                     "fuel_type" => "required|string",
                     "type" => "required|string",
                     "source" => "required|string",
-        
+                    "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                    "date" => "nullable|sometimes|string",
+                    
                     "tripTickets"                  => "required|array|min:1",
                     "tripTickets.*.departure"      => "required|string",
                     "tripTickets.*.destination"    => "required|string",
@@ -124,6 +127,8 @@ class RequestController extends Controller
                     "fuel_type" => "required|string",
                     "type" => "required|string",
                     "source" => "required|string",
+                    "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                    "date" => "nullable|sometimes|string",
                 ]);
 
                 //4T AND 2T OF TRIP TICKETS IS SAVED AS TRIP-TICKET-ALLOWANCE IN TYPE IN THE FUEL_ALLOWANCES TABLE
@@ -149,6 +154,8 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
+                "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                "date" => "nullable|sometimes|string",
             ]);
 
             $currentBalance = AllowanceService::getBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
@@ -174,6 +181,8 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
+                "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                "date" => "nullable|sometimes|string",
             ]);
 
             $currentBalance = AllowanceService::getBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
@@ -197,6 +206,8 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
+                "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                "date" => "nullable|sometimes|string",
             ]);
         }
 
@@ -213,6 +224,10 @@ class RequestController extends Controller
             DB::beginTransaction();
 
             $reference_number = 'REF-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+            
+            // Log::info($request->plate_number);
+
+            $vehicle = VehicleService::fetchVehicle($request->plate_number);
 
             $fuelRequest = ModelsRequest::create([
                 "employeeid" => $request->employeeid,
@@ -225,7 +240,7 @@ class RequestController extends Controller
 
                 "division" => $request->division ?? null,
 
-                "plate_number" => $request->plate_number ?? null,
+                "vehicle_id" => $vehicle->id ?? null,
                 "purpose" => $request->purpose,
                 "quantity" => $request->quantity,
                 "unit" => $request->unit,
@@ -235,16 +250,16 @@ class RequestController extends Controller
 
                 "source" => $request->source,
 
-                "date" => Carbon::now(),
+                "date" => $request->date ?? Carbon::now(),
 
-                "reference_number" => $reference_number,
+                "reference_number" => $request->reference_number ?? $reference_number,
             ]);
 
 
             if($fuelRequest && $type === "trip-ticket"){
                 $tripTicket = TripTicket::create([
                     "request_id" => $fuelRequest->id,
-                    "plate_number" => $fuelRequest->plate_number ?? null,
+                    "plate_number" => $request->plate_number ?? null,
                     "driver" => $fuelRequest->requested_by,
                     "date" => $fuelRequest->date,
                 ]);
@@ -296,7 +311,7 @@ class RequestController extends Controller
                     "requested_by" => "required|string",
                     "department" => "required|string",
                     "division" => "nullable|string",
-                    "plate_number" => "nullable|string",
+                    "plate_number" => "required|string",
                     "purpose" => "required|string|max:255",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
@@ -304,6 +319,8 @@ class RequestController extends Controller
                     "fuel_type" => "required|string",
                     "type" => "required|string",
                     "source" => "required|string",
+                    // "reference_number" => "required|string|unique:requests,reference_number",
+                    "date" => "required|string",
         
                     "tripTickets"                  => "required|array|min:1",
                     "tripTickets.*.departure"      => "required|string",
@@ -326,6 +343,8 @@ class RequestController extends Controller
                     "fuel_type" => "required|string",
                     "type" => "required|string",
                     "source" => "required|string",
+                    // "reference_number" => "required|string|unique:requests,reference_number",
+                    "date" => "required|string",
                 ]);
 
                 //4T AND 2T OF TRIP TICKETS IS SAVED AS TRIP-TICKET-ALLOWANCE IN TYPE IN THE FUEL_ALLOWANCES TABLE
@@ -351,6 +370,8 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
+                // "reference_number" => "required|string|unique:requests,reference_number",
+                "date" => "required|string",
             ]);
 
             $currentBalance = AllowanceService::getBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
@@ -376,6 +397,8 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
+                // "reference_number" => "required|string|unique:requests,reference_number",
+                "date" => "required|string",
             ]);
 
             $currentBalance = AllowanceService::getBalance($request->employeeid, $this->getAllowanceType($request->fuel_type));
@@ -399,6 +422,8 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
+                // "reference_number" => "required|string|unique:requests,reference_number",
+                "date" => "required|string",
             ]);
         }
 
@@ -417,6 +442,8 @@ class RequestController extends Controller
             $fuelRequest = ModelsRequest::findOrFail($id);
             $fuelRequestBeforeUpdate = clone $fuelRequest;
 
+            $vehicle = VehicleService::fetchVehicle($request->plate_number);
+
             $fuelRequest->update([
                 "employeeid" => $request->employeeid,
                 "requested_by" => $request->requested_by,
@@ -428,7 +455,7 @@ class RequestController extends Controller
 
                 "division" => $request->division ?? null,
 
-                "plate_number" => $request->plate_number ?? null,
+                "vehicle_id" => $vehicle->id ?? null,
                 "purpose" => $request->purpose,
                 "quantity" => $request->quantity,
                 "unit" => $request->unit,
@@ -437,6 +464,10 @@ class RequestController extends Controller
                 "type" => $request->type,
 
                 "source" => $request->source,
+
+                "date" => $request->date,
+
+                // "reference_number" => $request->reference_number,
             ]);
 
 
@@ -449,7 +480,7 @@ class RequestController extends Controller
 
                     // Update base trip ticket info
                     $tripTicket->update([
-                        "plate_number" => $fuelRequest->plate_number ?? null,
+                        "plate_number" => $request->plate_number ?? null,
                         "driver" => $fuelRequest->requested_by,
                         "date" => Carbon::now(),
                     ]);
@@ -457,7 +488,7 @@ class RequestController extends Controller
                     // If no trip ticket exists yet, create a new one
                     $tripTicket = TripTicket::create([
                         "request_id" => $fuelRequest->id,
-                        "plate_number" => $fuelRequest->plate_number ?? null,
+                        "plate_number" => $request->plate_number ?? null,
                         "driver" => $fuelRequest->requested_by,
                         "date" => Carbon::now(),
                     ]);

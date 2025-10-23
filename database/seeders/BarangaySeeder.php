@@ -28,6 +28,7 @@ class BarangaySeeder extends Seeder
                 'lat' => $row['lat'],
                 'lng' => $row['lng'],
                 'municipality' => $row['municipality'] ?? null,
+                'road_distance' => $row['road_distance'],
             ]);
         }
 

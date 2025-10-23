@@ -17,7 +17,7 @@ class Request extends Model
 
         "department",
         "division",
-        "plate_number",
+        "vehicle_id",
         "purpose",
 
         "quantity",

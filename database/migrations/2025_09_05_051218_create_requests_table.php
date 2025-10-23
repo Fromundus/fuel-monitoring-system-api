@@ -21,7 +21,9 @@ return new class extends Migration
 
             $table->string("department");
             $table->string("division")->nullable();
-            $table->string("plate_number")->nullable();
+
+            $table->unsignedBigInteger('vehicle_id');
+            
             $table->string("purpose");
 
             $table->decimal("quantity", 12, 2)->default(0);

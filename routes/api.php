@@ -21,6 +21,7 @@ use App\Models\Warehousing\Item;
 use App\Services\AllowanceService;
 use App\Services\EmployeeService;
 use App\Services\SettingService;
+use App\Services\VehicleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -66,7 +67,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::get('/vehicles', [VehicleController::class, 'index']);
 
     //BARANGAYS
-    Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
+    // Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
     Route::post('/distances', [BarangayDistanceController::class, 'getDistances']);
 
     Route::prefix('/users')->group(function(){
@@ -131,4 +132,8 @@ Route::get('/test/settings', function(){
     return response()->json([
         "data" => SettingService::getLatestSettings(),
     ]);
+});
+
+Route::get('/test/vehicle/{plate_no}', function($plate_no){
+    return VehicleService::fetchVehicle($plate_no);
 });
