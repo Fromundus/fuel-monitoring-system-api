@@ -13,7 +13,7 @@ class FuelDivisorController extends Controller
     {
         $validated = $request->validate([
             'ids' => 'required|array',
-            'fuel_divisor' => 'required|numeric',
+            'fuel_divisor' => 'required|numeric|min:1',
         ]);
 
         foreach ($validated['ids'] as $vehicleId) {

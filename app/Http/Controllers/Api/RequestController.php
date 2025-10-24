@@ -32,6 +32,7 @@ class RequestController extends Controller
         $type = $request->query('type');
         $status = $request->query('status');
         $fuel_type = $request->query('fuel_type');
+        $source = $request->query('source');
 
         $query = ModelsRequest::query()->with(["tripTickets.rows", "logs"]);
 
@@ -39,7 +40,7 @@ class RequestController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('requested_by', 'like', "%{$search}%")
                 ->orWhere('department', 'like', "%{$search}%")
-                ->orWhere('plate_number', 'like', "%{$search}%");
+                ->orWhere('reference_number', 'like', "%{$search}%");
             });
         }
 
@@ -53,6 +54,10 @@ class RequestController extends Controller
 
         if($fuel_type && $fuel_type !== 'all'){
             $query->where('fuel_type', $fuel_type);
+        }
+
+        if($source && $source !== 'all' ){
+            $query->where('source', $source);
         }
 
         $requests = $query->orderBy('updated_at', 'desc')->paginate($perPage);
@@ -318,7 +323,7 @@ class RequestController extends Controller
                     "department" => "required|string",
                     "division" => "nullable|string",
                     "plate_number" => "required|string",
-                    "fuel_divisor" => "required|numeric",
+                    "fuel_divisor" => "nullable|sometimes|numeric",
                     "purpose" => "required|string|max:255",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
@@ -467,7 +472,7 @@ class RequestController extends Controller
                 "division" => $request->division ?? null,
 
                 "vehicle_id" => $vehicle->id ?? null,
-                "fuel_divisor" => $request->fuel_divisor ?? null,
+                "fuel_divisor" => $request->fuel_divisor ?? $fuelRequest->fuel_divisor,
                 "purpose" => $request->purpose,
                 "quantity" => $request->quantity,
                 "unit" => $request->unit,
