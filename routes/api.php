@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\BarangayController;
 use App\Http\Controllers\Api\BarangayDistanceController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmployeeOverviewController;
+use App\Http\Controllers\Api\FuelDivisorController;
 use App\Http\Controllers\Api\FuelTypeController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MemberController;
@@ -65,6 +66,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::get('/employees', [EmployeeController::class, 'index']);
     Route::get('/employees/{employeeid}', [EmployeeController::class, 'show']);
     Route::get('/vehicles', [VehicleController::class, 'index']);
+
+    Route::post('/set-fuel-divisor', [FuelDivisorController::class, 'update']);
 
     //BARANGAYS
     // Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);

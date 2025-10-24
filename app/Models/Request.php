@@ -4,10 +4,13 @@ namespace App\Models;
 
 use App\Http\Resources\EmployeeWithBalanceResource;
 use App\Services\EmployeeService;
+use App\Services\VehicleService;
 use Illuminate\Database\Eloquent\Model;
 
 class Request extends Model
 {
+    protected $appends = ['vehicle'];
+
     protected $fillable = [
         "employeeid",
         "requested_by",
@@ -18,6 +21,7 @@ class Request extends Model
         "department",
         "division",
         "vehicle_id",
+        "fuel_divisor",
         "purpose",
 
         "quantity",
@@ -25,14 +29,12 @@ class Request extends Model
         "fuel_type_id",
         "fuel_type",
 
-        "checked_by",
-        "checked_by_date",
-        "recommending_approval",
-        "recommending_approval_date",
         "approved_by",
-        "approved_by_date",
-        "posted_by",
-        "posted_by_date",
+        "approved_date",
+
+        "released_by",
+        "released_to",
+        "released_date",
 
         "type",
         "source",
@@ -42,6 +44,8 @@ class Request extends Model
         'date',
 
         'reference_number',
+
+        'remarks'
     ];
 
     public function tripTickets(){
@@ -50,5 +54,10 @@ class Request extends Model
 
     public function logs(){
         return $this->hasMany(ActivityLog::class);
+    }
+
+    public function getVehicleAttribute()
+    {
+        return VehicleService::fetchVehicleById($this->vehicle_id);
     }
 }

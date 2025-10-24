@@ -78,6 +78,7 @@ class BarangayDistanceController extends Controller
     public function getDistances(Request $request)
     {
         $rows = $request->input('rows'); // expect array of tripTicketRows
+        $fuel_divisor = $request->input('fuel_divisor');
 
         if (!$rows || !is_array($rows)) {
             return response()->json(['error' => 'Rows array is required'], 400);
@@ -138,9 +139,17 @@ class BarangayDistanceController extends Controller
             }
 
             $exactDistance = $distance->distance_meters / 1000;
-            $distanceKm = ceil(($distance->distance_meters / 1000) + ($to->road_distance) * 2);
+            $distanceKm = ceil(($distance->distance_meters / 1000) + ($to->road_distance) * 2.5);
             // $quantity = ceil($distanceKm / 35);
-            $quantity = $distanceKm / 35;
+            $quantity = 0;
+
+            $defaultDivisor = 35;
+
+            if($fuel_divisor > 0){
+                $quantity = $distanceKm / $fuel_divisor;
+            } else {
+                $quantity = $distanceKm / $defaultDivisor; // 30 is the default
+            }
 
             // add to totals
             $exactTotalDistance += $exactDistance;
@@ -158,6 +167,7 @@ class BarangayDistanceController extends Controller
             // 'exact_total_distance' => number_format($exactTotalDistance, 2),
             'total_distance' => number_format($totalDistance, 2),
             'total_quantity' => number_format($totalQuantity, 2),
+            'fuel_divisor' => $fuel_divisor > 0 ? number_format( $fuel_divisor, 2) : "{$defaultDivisor} (default)",
         ]);
     }
 }

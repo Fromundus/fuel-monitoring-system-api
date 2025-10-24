@@ -96,6 +96,7 @@ class RequestController extends Controller
                     "department" => "required|string",
                     "division" => "nullable|string",
                     "plate_number" => "required|string",
+                    "fuel_divisor" => "required|numeric",
                     "purpose" => "required|string|max:255",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
@@ -103,7 +104,7 @@ class RequestController extends Controller
                     "fuel_type" => "required|string",
                     "type" => "required|string",
                     "source" => "required|string",
-                    "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                    "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                     "date" => "nullable|sometimes|string",
                     
                     "tripTickets"                  => "required|array|min:1",
@@ -120,6 +121,7 @@ class RequestController extends Controller
                     "department" => "required|string",
                     "division" => "nullable|string",
                     "plate_number" => "nullable|string",
+                    "fuel_divisor" => "nullable|numeric",
                     "purpose" => "required|string|max:255",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
@@ -127,7 +129,7 @@ class RequestController extends Controller
                     "fuel_type" => "required|string",
                     "type" => "required|string",
                     "source" => "required|string",
-                    "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                    "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                     "date" => "nullable|sometimes|string",
                 ]);
 
@@ -147,6 +149,7 @@ class RequestController extends Controller
                 "department" => "required|string",
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
+                "fuel_divisor" => "nullable|numeric",
                 "purpose" => "required|string|max:255",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
@@ -154,7 +157,7 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
-                "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                 "date" => "nullable|sometimes|string",
             ]);
 
@@ -174,6 +177,7 @@ class RequestController extends Controller
                 "department" => "required|string",
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
+                "fuel_divisor" => "nullable|numeric",
                 "purpose" => "required|string|max:255",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
@@ -181,7 +185,7 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
-                "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                 "date" => "nullable|sometimes|string",
             ]);
 
@@ -199,6 +203,7 @@ class RequestController extends Controller
                 "department" => "required|string",
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
+                "fuel_divisor" => "nullable|numeric",
                 "purpose" => "required|string|max:255",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
@@ -206,7 +211,7 @@ class RequestController extends Controller
                 "fuel_type" => "required|string",
                 "type" => "required|string",
                 "source" => "required|string",
-                "reference_number" => "nullable|sometimes|string|unique:requests,reference_number",
+                "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                 "date" => "nullable|sometimes|string",
             ]);
         }
@@ -241,6 +246,7 @@ class RequestController extends Controller
                 "division" => $request->division ?? null,
 
                 "vehicle_id" => $vehicle->id ?? null,
+                "fuel_divisor" => $request->fuel_divisor ?? null,
                 "purpose" => $request->purpose,
                 "quantity" => $request->quantity,
                 "unit" => $request->unit,
@@ -312,6 +318,7 @@ class RequestController extends Controller
                     "department" => "required|string",
                     "division" => "nullable|string",
                     "plate_number" => "required|string",
+                    "fuel_divisor" => "required|numeric",
                     "purpose" => "required|string|max:255",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
@@ -336,6 +343,7 @@ class RequestController extends Controller
                     "department" => "required|string",
                     "division" => "nullable|string",
                     "plate_number" => "nullable|string",
+                    "fuel_divisor" => "nullable|numeric",
                     "purpose" => "required|string|max:255",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
@@ -363,6 +371,7 @@ class RequestController extends Controller
                 "department" => "required|string",
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
+                "fuel_divisor" => "nullable|numeric",
                 "purpose" => "required|string|max:255",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
@@ -390,6 +399,7 @@ class RequestController extends Controller
                 "department" => "required|string",
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
+                "fuel_divisor" => "nullable|numeric",
                 "purpose" => "required|string|max:255",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
@@ -415,6 +425,7 @@ class RequestController extends Controller
                 "department" => "required|string",
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
+                "fuel_divisor" => "nullable|numeric",
                 "purpose" => "required|string|max:255",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
@@ -456,6 +467,7 @@ class RequestController extends Controller
                 "division" => $request->division ?? null,
 
                 "vehicle_id" => $vehicle->id ?? null,
+                "fuel_divisor" => $request->fuel_divisor ?? null,
                 "purpose" => $request->purpose,
                 "quantity" => $request->quantity,
                 "unit" => $request->unit,
@@ -536,7 +548,9 @@ class RequestController extends Controller
 
     public function updateStatus(Request $request, $id){
         $validated = $request->validate([
-            "status" => "required|string|in:pending,approved,rejected,released,cancelled,undo"
+            "status" => "required|string|in:pending,approved,rejected,released,cancelled,undo",
+            "released_to" => "required_if:status,released|string",
+            "remarks" => "nullable|string",
         ]);
 
         try {
@@ -572,9 +586,38 @@ class RequestController extends Controller
                         }
                     }
 
-                    $fuelRequest->update([
-                        "status" => $validated["status"],
-                    ]);
+                    $user = $request->user();
+
+                    if($validated["status"] === "approved"){
+                        $fuelRequest->update([
+                            "status" => $validated["status"],
+                            "approved_by" => $user->name,
+                            "approved_date" => Carbon::now(),
+                            "released_by" => null,
+                            "released_date" => null,
+                            "released_to" => null,
+                            "remarks" => null,
+                        ]);
+                    } else if ($validated["status"] === "released") {
+                        $fuelRequest->update([
+                            "status" => $validated["status"],
+                            "released_by" => $user->name,
+                            "released_date" => Carbon::now(),
+                            "released_to" => $validated["released_to"],
+                            "remarks" => $validated["remarks"],
+                        ]);
+                    } else {
+                        $fuelRequest->update([
+                            "status" => $validated["status"],
+                            "approved_by" => null,
+                            "approved_date" => null,
+                            "released_by" => null,
+                            "released_date" => null,
+                            "released_to" => null,
+                            "remarks" => null,
+                        ]);
+                    }
+
                 }
     
                 // FOR ALLOWANCE AND DELEGATED
@@ -642,6 +685,10 @@ class RequestController extends Controller
 
                         $fuelRequest->update([
                             "status" => "approved",
+                            "released_by" => null,
+                            "released_date" => null,
+                            "released_to" => null,
+                            "remarks" => null,
                         ]);
     
                         if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
@@ -660,6 +707,12 @@ class RequestController extends Controller
                     } else if ($fuelRequestBeforeUpdate["status"] === "rejected" || $fuelRequestBeforeUpdate["status"] === "cancelled" || $fuelRequestBeforeUpdate["status"] === "approved"){
                         $fuelRequest->update([
                             "status" => "pending",
+                            "approved_by" => null,
+                            "approved_date" => null,
+                            "released_by" => null,
+                            "released_date" => null,
+                            "released_to" => null,
+                            "remarks" => null,
                         ]);
                     }
                 }

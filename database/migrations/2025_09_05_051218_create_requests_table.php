@@ -23,6 +23,8 @@ return new class extends Migration
             $table->string("division")->nullable();
 
             $table->unsignedBigInteger('vehicle_id');
+
+            $table->decimal('fuel_divisor', 12, 2)->default(0);
             
             $table->string("purpose");
 
@@ -31,14 +33,12 @@ return new class extends Migration
             $table->integer("fuel_type_id");
             $table->string("fuel_type");
 
-            $table->string("checked_by")->nullable();
-            $table->date("checked_by_date")->nullable();
-            $table->string("recommending_approval")->nullable();
-            $table->date("recommending_approval_date")->nullable();
             $table->string("approved_by")->nullable();
-            $table->date("approved_by_date")->nullable();
-            $table->string("posted_by")->nullable();
-            $table->date("posted_by_date")->nullable();
+            $table->timestamp("approved_date")->nullable();
+            
+            $table->string("released_by")->nullable();
+            $table->string("released_to")->nullable();
+            $table->timestamp("released_date")->nullable();
 
             $table->string("type"); // allowance, trip-ticket, emergency, delegated
 
@@ -46,9 +46,12 @@ return new class extends Migration
 
             $table->string("source")->default('ficelco');
 
-            $table->date('date');
+            $table->timestamp('date');
 
             $table->string("reference_number")->unique();
+
+            $table->text('remarks')->nullable();
+
             $table->timestamps();
         });
     }
