@@ -22,9 +22,9 @@ return new class extends Migration
             $table->string("department");
             $table->string("division")->nullable();
 
-            $table->unsignedBigInteger('vehicle_id');
+            $table->unsignedBigInteger('vehicle_id')->nullable();
 
-            $table->decimal('fuel_divisor', 12, 2)->default(0);
+            $table->decimal('fuel_divisor', 12, 2)->nullable();
             
             $table->string("purpose");
 
@@ -40,17 +40,24 @@ return new class extends Migration
             $table->string("released_to")->nullable();
             $table->timestamp("released_date")->nullable();
 
+            $table->timestamp("billing_date")->nullable();
+            $table->decimal("unit_price", 12, 2)->default(0)->nullable();
+
             $table->string("type"); // allowance, trip-ticket, emergency, delegated
 
             $table->enum("status", ['pending', 'approved', 'rejected', 'released', 'cancelled'])->default('pending'); // pending, approved, rejected, released, cancelled
 
-            $table->string("source")->default('ficelco');
+            $table->unsignedBigInteger("source_id");
 
             $table->timestamp('date');
 
             $table->string("reference_number")->unique();
 
             $table->text('remarks')->nullable();
+
+            $table->foreign('source_id')->references('id')->on('sources')->noActionOnDelete();
+
+            $table->index(['type', 'status', 'fuel_type', 'source_id']);
 
             $table->timestamps();
         });

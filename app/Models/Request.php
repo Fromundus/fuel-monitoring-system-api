@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Request extends Model
 {
-    protected $appends = ['vehicle'];
+    protected $appends = ['vehicle', 'amount'];
 
     protected $fillable = [
         "employeeid",
@@ -20,8 +20,11 @@ class Request extends Model
 
         "department",
         "division",
-        "vehicle_id",
-        "fuel_divisor",
+
+        'vehicle_id',
+
+        'fuel_divisor',
+            
         "purpose",
 
         "quantity",
@@ -31,21 +34,25 @@ class Request extends Model
 
         "approved_by",
         "approved_date",
-
+            
         "released_by",
         "released_to",
         "released_date",
 
+        "billing_date",
+        "unit_price",
+
         "type",
-        "source",
 
         "status",
 
+        "source_id",
+
         'date',
 
-        'reference_number',
+        "reference_number",
 
-        'remarks'
+        'remarks',
     ];
 
     public function tripTickets(){
@@ -56,8 +63,17 @@ class Request extends Model
         return $this->hasMany(ActivityLog::class);
     }
 
+    public function source(){
+        return $this->belongsTo(Source::class);
+    }
+
     public function getVehicleAttribute()
     {
-        return VehicleService::fetchVehicleById($this->vehicle_id);
+        return $this->vehicle_id ? VehicleService::fetchVehicleById($this->vehicle_id) : null;
+    }
+
+    public function getAmountAttribute()
+    {
+        return number_format($this->quantity * $this->unit_price, 2);
     }
 }

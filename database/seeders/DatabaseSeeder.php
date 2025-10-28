@@ -6,6 +6,7 @@ use App\Models\Barangay;
 use App\Models\FuelType;
 use App\Models\Inventory;
 use App\Models\Setting;
+use App\Models\Source;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -41,6 +42,18 @@ class DatabaseSeeder extends Seeder
             'email' => 'superadmin@test.com',
             'password' => Hash::make("1234"),
             'role' => 'superadmin',
+        ]);
+
+        Source::factory()->create([
+            'name' => 'Ficelco',
+        ]);
+
+        Source::factory()->create([
+            'name' => 'Silangan Trading',
+        ]);
+
+        Source::factory()->create([
+            'name' => "GELO'S GO - FUEL",
         ]);
 
         Setting::factory()->create([

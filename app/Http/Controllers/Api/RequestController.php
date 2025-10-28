@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EmployeeWithBalanceResource;
 use App\Models\Barangay;
 use App\Models\Request as ModelsRequest;
+use App\Models\Source;
 use App\Models\TripTicket;
 use App\Models\TripTicketRow;
 use App\Models\Warehousing\Item;
@@ -15,6 +16,7 @@ use App\Services\AllowanceService;
 use App\Services\BalanceWarehouseService;
 use App\Services\EmployeeService;
 use App\Services\MilestoneAllowanceService;
+use App\Services\RequestService;
 use App\Services\VehicleService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -34,7 +36,9 @@ class RequestController extends Controller
         $fuel_type = $request->query('fuel_type');
         $source = $request->query('source');
 
-        $query = ModelsRequest::query()->with(["tripTickets.rows", "logs"]);
+        $billing_date = $request->query('billing_date');
+
+        $query = ModelsRequest::query()->with(["tripTickets.rows", "logs", "source"]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -56,12 +60,38 @@ class RequestController extends Controller
             $query->where('fuel_type', $fuel_type);
         }
 
-        if($source && $source !== 'all' ){
-            $query->where('source', $source);
+        if($source){
+            if($source === "outside"){
+                $query->whereNot('source_id', 1);
+            } else if ($source !== 'all' && $source !== "outside"){
+                $query->where('source_id', $source);
+            }
         }
 
-        $requests = $query->orderBy('updated_at', 'desc')->paginate($perPage);
+        if($billing_date && $billing_date !== 'all'){
+            $query->where('billing_date', $billing_date);
+        }
 
+        $grandTotal = (clone $query)
+            ->select(DB::raw('SUM(quantity * unit_price) as total'))
+            ->value('total') ?? 0;
+
+        if ($perPage === 'all' || (int)$perPage === 0) {
+            $allRequests = $query->orderBy('updated_at', 'desc')->get();
+
+            $requests = [
+                "current_page" => 1,
+                "data" => $allRequests,
+                "from" => 1,
+                "last_page" => 1,
+                "per_page" => $allRequests->count(),
+                "to" => $allRequests->count(),
+                "total" => $allRequests->count(),
+            ];
+        } else {
+            $requests = $query->orderBy('updated_at', 'desc')->paginate($perPage);
+        }
+        
         $counts = [
             'total'      => ModelsRequest::count(),
             'allowance' => ModelsRequest::where('type', 'allowance')->count(),
@@ -70,14 +100,25 @@ class RequestController extends Controller
             'emergency'       => ModelsRequest::where('type', 'emergency')->count(),
         ];
 
+        $sources = Source::all();
+
+        $billingDates = ModelsRequest::select('billing_date')
+            ->whereNotNull('billing_date')
+            ->groupBy('billing_date')
+            ->orderBy('billing_date', 'asc')
+            ->pluck('billing_date');
+
         return response()->json([
             "requests" => $requests,
             "counts" => $counts,
+            "sources" => $sources ?? [],
+            "billing_dates" => $billingDates ?? [],
+            "grand_total" => number_format($grandTotal, 2),
         ]);
     }
 
     public function show($id){
-        $request = ModelsRequest::with(["tripTickets.rows", "logs"])->findOrFail($id);
+        $request = ModelsRequest::with(["tripTickets.rows", "logs", "source"])->findOrFail($id);
         $barangays = Barangay::all();
         $employee = EmployeeService::fetchActiveEmployee($request->employeeid);
 
@@ -92,6 +133,8 @@ class RequestController extends Controller
     
     public function store(Request $request){
         $type = $request->type;
+
+        RequestService::isCapableOfRequesting($request->employeeid);
 
         if($type === "trip-ticket"){
             if($request->fuel_type === "Gasoline" || $request->fuel_type === "Diesel"){
@@ -108,7 +151,8 @@ class RequestController extends Controller
                     "fuel_type_id" => "required|string",
                     "fuel_type" => "required|string",
                     "type" => "required|string",
-                    "source" => "required|string",
+                    // "source" => "required|string",
+                    "source_id" => "required|integer",
                     "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                     "date" => "nullable|sometimes|string",
                     
@@ -133,7 +177,8 @@ class RequestController extends Controller
                     "fuel_type_id" => "required|string",
                     "fuel_type" => "required|string",
                     "type" => "required|string",
-                    "source" => "required|string",
+                    // "source" => "required|string",
+                    "source_id" => "required|integer",
                     "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                     "date" => "nullable|sometimes|string",
                 ]);
@@ -161,7 +206,8 @@ class RequestController extends Controller
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
-                "source" => "required|string",
+                // "source" => "required|string",
+                "source_id" => "required|integer",
                 "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                 "date" => "nullable|sometimes|string",
             ]);
@@ -189,7 +235,8 @@ class RequestController extends Controller
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
-                "source" => "required|string",
+                // "source" => "required|string",
+                "source_id" => "required|integer",
                 "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                 "date" => "nullable|sometimes|string",
             ]);
@@ -215,7 +262,8 @@ class RequestController extends Controller
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
-                "source" => "required|string",
+                // "source" => "required|string",
+                "source_id" => "required|integer",
                 "reference_number" => "required|sometimes|string|unique:requests,reference_number",
                 "date" => "nullable|sometimes|string",
             ]);
@@ -237,8 +285,6 @@ class RequestController extends Controller
             
             // Log::info($request->plate_number);
 
-            $vehicle = VehicleService::fetchVehicle($request->plate_number);
-
             $fuelRequest = ModelsRequest::create([
                 "employeeid" => $request->employeeid,
                 "requested_by" => $request->requested_by,
@@ -250,7 +296,7 @@ class RequestController extends Controller
 
                 "division" => $request->division ?? null,
 
-                "vehicle_id" => $vehicle->id ?? null,
+                "vehicle_id" => $request->plate_number ? VehicleService::fetchVehicle($request->plate_number)->id : null,
                 "fuel_divisor" => $request->fuel_divisor ?? null,
                 "purpose" => $request->purpose,
                 "quantity" => $request->quantity,
@@ -259,7 +305,8 @@ class RequestController extends Controller
                 "fuel_type" => $request->fuel_type,
                 "type" => $request->type,
 
-                "source" => $request->source,
+                // "source" => $request->source,
+                "source_id" => $request->source_id,
 
                 "date" => $request->date ?? Carbon::now(),
 
@@ -330,7 +377,8 @@ class RequestController extends Controller
                     "fuel_type_id" => "required|string",
                     "fuel_type" => "required|string",
                     "type" => "required|string",
-                    "source" => "required|string",
+                    // "source" => "required|string",
+                    "source_id" => "required|integer",
                     // "reference_number" => "required|string|unique:requests,reference_number",
                     "date" => "required|string",
         
@@ -355,7 +403,8 @@ class RequestController extends Controller
                     "fuel_type_id" => "required|string",
                     "fuel_type" => "required|string",
                     "type" => "required|string",
-                    "source" => "required|string",
+                    // "source" => "required|string",
+                    "source_id" => "required|integer",
                     // "reference_number" => "required|string|unique:requests,reference_number",
                     "date" => "required|string",
                 ]);
@@ -383,7 +432,8 @@ class RequestController extends Controller
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
-                "source" => "required|string",
+                // "source" => "required|string",
+                "source_id" => "required|integer",
                 // "reference_number" => "required|string|unique:requests,reference_number",
                 "date" => "required|string",
             ]);
@@ -411,7 +461,8 @@ class RequestController extends Controller
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
-                "source" => "required|string",
+                // "source" => "required|string",
+                "source_id" => "required|integer",
                 // "reference_number" => "required|string|unique:requests,reference_number",
                 "date" => "required|string",
             ]);
@@ -437,7 +488,8 @@ class RequestController extends Controller
                 "fuel_type_id" => "required|string",
                 "fuel_type" => "required|string",
                 "type" => "required|string",
-                "source" => "required|string",
+                // "source" => "required|string",
+                "source_id" => "required|integer",
                 // "reference_number" => "required|string|unique:requests,reference_number",
                 "date" => "required|string",
             ]);
@@ -458,8 +510,6 @@ class RequestController extends Controller
             $fuelRequest = ModelsRequest::findOrFail($id);
             $fuelRequestBeforeUpdate = clone $fuelRequest;
 
-            $vehicle = VehicleService::fetchVehicle($request->plate_number);
-
             $fuelRequest->update([
                 "employeeid" => $request->employeeid,
                 "requested_by" => $request->requested_by,
@@ -471,7 +521,7 @@ class RequestController extends Controller
 
                 "division" => $request->division ?? null,
 
-                "vehicle_id" => $vehicle->id ?? null,
+                "vehicle_id" => $request->plate_number ? VehicleService::fetchVehicle($request->plate_number)->id : null,
                 "fuel_divisor" => $request->fuel_divisor ?? $fuelRequest->fuel_divisor,
                 "purpose" => $request->purpose,
                 "quantity" => $request->quantity,
@@ -480,7 +530,8 @@ class RequestController extends Controller
                 "fuel_type" => $request->fuel_type,
                 "type" => $request->type,
 
-                "source" => $request->source,
+                // "source" => $request->source,
+                "source_id" => $request->source_id,
 
                 "date" => $request->date,
 
@@ -666,10 +717,12 @@ class RequestController extends Controller
                 
                 if ($validated["status"] === "undo"){
 
+                    
                     if($fuelRequestBeforeUpdate["status"] === "released"){
                         //PUT THE ADD LOGIC HERE
                         //if the request status before undoing is released, it should add back the quantity subtracted to the current balance from the main items - warehousing
-
+                        RequestService::isCapableOfRequesting($fuelRequest->employeeid);
+                        
                         $itemWarehousing = Item::where('id', $fuelRequest->fuel_type_id)->first();
 
                         if($itemWarehousing){
@@ -710,6 +763,10 @@ class RequestController extends Controller
                         }
 
                     } else if ($fuelRequestBeforeUpdate["status"] === "rejected" || $fuelRequestBeforeUpdate["status"] === "cancelled" || $fuelRequestBeforeUpdate["status"] === "approved"){
+                        if($fuelRequestBeforeUpdate["status"] != "approved"){
+                            RequestService::isCapableOfRequesting($fuelRequest->employeeid);
+                        }
+
                         $fuelRequest->update([
                             "status" => "pending",
                             "approved_by" => null,
@@ -758,6 +815,57 @@ class RequestController extends Controller
             return response()->json([
                 "message" => "Request not Found",
             ], 404);
+        }
+
+    }
+
+    public function checkIfCapableOfCreatingRequest($employeeid){
+        RequestService::isCapableOfRequesting($employeeid);
+
+        return response()->json([
+            "status" => true,
+        ]);
+    }
+
+    public function bulkUpdateStatus(Request $request){
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'billing_date' => "required|string",
+            'released_date' => "required|string",
+            'unit_price' => 'required|numeric|min:1',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $fuelRequests = ModelsRequest::whereIn('reference_number', $validated['ids'])->get();
+
+            foreach($fuelRequests as $fuelRequest){
+                $fuelRequestBeforeUpdate = clone $fuelRequest;
+
+                $fuelRequest->update([
+                    'billing_date' => $validated['billing_date'],
+                    'released_date' => $validated['released_date'],
+                    'unit_price' => $validated['unit_price'],
+                    'status' => 'released',
+                    'released_by' => $request->user()->name,
+                    'released_to' => $fuelRequest->requested_by,
+                ]);
+
+                ActivityLogger::log([
+                    'action' => 'released',
+                    'request' => $fuelRequest,
+                    'requestBeforeUpdate' => $fuelRequestBeforeUpdate,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json(['message' => 'Requests updated successfully']);
+        } catch (\Exception $e){
+            DB::rollBack();
+
+            throw $e;
         }
 
     }

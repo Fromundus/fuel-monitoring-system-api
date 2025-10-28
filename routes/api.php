@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\RegisteredMemberController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\SourceController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Second\EmployeeController;
 use App\Http\Controllers\Second\SecondController;
@@ -49,9 +50,11 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::prefix('/requests')->group(function(){
         Route::get('/', [RequestController::class, 'index']);
         Route::get('/{id}', [RequestController::class, 'show']);
+        Route::get('/check-if-capable-of-creating-request/{id}', [RequestController::class, 'checkIfCapableOfCreatingRequest']);
         Route::post('/', [RequestController::class, 'store']);
         Route::put('/update/{id}', [RequestController::class, 'update']);
         Route::put('/{id}', [RequestController::class, 'updateStatus']);
+        Route::post('/bulk/update', [RequestController::class, 'bulkUpdateStatus']);
         Route::delete('/', [RequestController::class, 'delete']);
     });
 
@@ -95,6 +98,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
             Route::put('/{id}', [FuelTypeController::class, 'update']);
             Route::delete('/', [FuelTypeController::class, 'destroy']);
         });
+
+        Route::apiResource('/sources', SourceController::class);
 
         Route::post('/scan/request', [RequestController::class, 'scanRequest']);
 
