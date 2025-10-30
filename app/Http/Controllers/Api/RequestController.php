@@ -14,6 +14,7 @@ use App\Models\Warehousing\TransactionWarehousing;
 use App\Services\ActivityLogger;
 use App\Services\AllowanceService;
 use App\Services\BalanceWarehouseService;
+use App\Services\BroadcastEventService;
 use App\Services\EmployeeService;
 use App\Services\MilestoneAllowanceService;
 use App\Services\RequestService;
@@ -102,8 +103,24 @@ class RequestController extends Controller
 
         $sources = Source::all();
 
-        $billingDates = ModelsRequest::select('billing_date')
-            ->whereNotNull('billing_date')
+        // $billingDates = ModelsRequest::select('billing_date')
+        //     ->whereNotNull('billing_date')
+        //     ->groupBy('billing_date')
+        //     ->orderBy('billing_date', 'asc')
+        //     ->pluck('billing_date');
+
+        $billingDatesQuery = ModelsRequest::select('billing_date')
+            ->whereNotNull('billing_date');
+
+        if ($source) {
+            if ($source === "outside") {
+                $billingDatesQuery->whereNot('source_id', 1);
+            } else if ($source !== 'all' && $source !== "outside") {
+                $billingDatesQuery->where('source_id', $source);
+            }
+        }
+
+        $billingDates = $billingDatesQuery
             ->groupBy('billing_date')
             ->orderBy('billing_date', 'asc')
             ->pluck('billing_date');
@@ -345,7 +362,9 @@ class RequestController extends Controller
             ]);
             
             DB::commit();
-            
+
+            BroadcastEventService::signal('request');
+
             return response()->json([
                 "data" => $fuelRequest,
                 "message" => "Request Successfully Created", 
@@ -510,6 +529,12 @@ class RequestController extends Controller
             $fuelRequest = ModelsRequest::findOrFail($id);
             $fuelRequestBeforeUpdate = clone $fuelRequest;
 
+            if($fuelRequest->status !== "pending"){
+                throw ValidationException::withMessages([
+                    'message' => ["Invalid action please reload the page."],
+                ]);
+            }
+
             $fuelRequest->update([
                 "employeeid" => $request->employeeid,
                 "requested_by" => $request->requested_by,
@@ -588,6 +613,8 @@ class RequestController extends Controller
             ]);
             
             DB::commit();
+
+            BroadcastEventService::signal('request');
             
             return response()->json([
                 "data" => $fuelRequest,
@@ -815,7 +842,9 @@ class RequestController extends Controller
                 ]);
 
                 DB::commit();
-    
+
+                BroadcastEventService::signal('request');
+                
                 return response()->json([
                     "message" => "Updated Successfully"
                 ]);
@@ -867,7 +896,7 @@ class RequestController extends Controller
         try {
             DB::beginTransaction();
 
-            $fuelRequests = ModelsRequest::whereIn('reference_number', $validated['ids'])->get();
+            $fuelRequests = ModelsRequest::whereIn('reference_number', $validated['ids'])->where('status', 'approved')->where('source_id', '!=', 1)->get();
 
             foreach($fuelRequests as $fuelRequest){
                 $fuelRequestBeforeUpdate = clone $fuelRequest;
@@ -890,6 +919,8 @@ class RequestController extends Controller
 
             DB::commit();
 
+            BroadcastEventService::signal('request');
+
             return response()->json(['message' => 'Requests updated successfully']);
         } catch (\Exception $e){
             DB::rollBack();
@@ -911,6 +942,8 @@ class RequestController extends Controller
         // foreach($users as $user){
         //     ActivityLogger::log('delete', 'account', "Deleted account: #" . $user->id . " " . $user->name);
         // }
+
+        BroadcastEventService::signal('request');
 
         return response()->json(['message' => 'Requests deleted successfully']);
     }

@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Second\EmployeeController;
 use App\Http\Controllers\Second\SecondController;
 use App\Http\Controllers\Second\VehicleController;
+use App\Http\Controllers\Tets\BroadcastTestController;
 use App\Models\Warehousing\Item;
 use App\Services\AllowanceService;
 use App\Services\EmployeeService;
@@ -69,6 +70,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     Route::get('/employees', [EmployeeController::class, 'index']);
     Route::get('/employees/{employeeid}', [EmployeeController::class, 'show']);
     Route::get('/vehicles', [VehicleController::class, 'index']);
+    Route::get('/vehicles/{plate_number}', [VehicleController::class, 'show']);
 
     Route::post('/set-fuel-divisor', [FuelDivisorController::class, 'update']);
 
@@ -145,3 +147,5 @@ Route::get('/test/settings', function(){
 Route::get('/test/vehicle/{plate_no}', function($plate_no){
     return VehicleService::fetchVehicle($plate_no);
 });
+
+Route::post('/broadcast-test', [BroadcastTestController::class, 'broadcast']);

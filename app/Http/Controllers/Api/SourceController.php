@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Source;
+use App\Services\BroadcastEventService;
 use Illuminate\Http\Request;
 
 class SourceController extends Controller
@@ -28,6 +29,8 @@ class SourceController extends Controller
 
         $source = Source::create($validated);
 
+        BroadcastEventService::signal("source");
+
         return response()->json([
             'message' => 'Source created successfully.',
             'data' => $source,
@@ -45,6 +48,8 @@ class SourceController extends Controller
 
         $source->update($validated);
 
+        BroadcastEventService::signal("source");
+
         return response()->json([
             'message' => 'Source updated successfully.',
             'data' => $source,
@@ -57,6 +62,8 @@ class SourceController extends Controller
     public function destroy(Source $source)
     {
         $source->delete();
+
+        BroadcastEventService::signal("source");
 
         return response()->json([
             'message' => 'Source deleted successfully.',

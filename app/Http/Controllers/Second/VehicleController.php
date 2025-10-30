@@ -124,4 +124,35 @@ class VehicleController extends Controller
         ]);
     }
 
+    public function show($plate_number){
+        $vehicle = DB::connection('mysql2')
+            ->table('vehicles as v')
+            ->select('v.*')
+            ->join(
+                DB::raw('(SELECT plate_no, MAX(id) as latest_id FROM vehicles GROUP BY plate_no) as latest'),
+                function ($join) {
+                    $join->on('v.id', '=', 'latest.latest_id');
+                }
+            )
+            ->where('v.plate_no', $plate_number)
+            ->first();
+
+        // Fetch related fuel divisors from the default connection
+        if($vehicle){
+            $fuelDivisor = DB::connection('mysql')
+                ->table('fuel_divisors')
+                ->where('vehicle_id', $vehicle->id)
+                ->first();
+    
+            $vehicle->fuel_divisor = $fuelDivisor;
+            return response()->json([
+                "data" => $vehicle
+            ]);
+        } else {
+            return response()->json([
+                "message" => "Vehicle not found."
+            ]);
+        }
+    }
+
 }
