@@ -51,10 +51,14 @@ class MilestoneAllowanceService
         $expectedMilestones = floor($totalDistance / $milestone);
         $expectedLiters = $expectedMilestones * $litersPerMilestone;
 
+        Log::info("Expected: {$expectedLiters}");
+
         $grantedLiters = AllowanceTransaction::where('employeeid', $employeeid)
             ->where('type', 'trip-ticket')
             ->whereIn('tx_type', ['grant', 'adjustment'])
             ->sum('quantity');
+
+        Log::info("Granted: {$grantedLiters}");
 
         $difference = $expectedLiters - $grantedLiters;
 

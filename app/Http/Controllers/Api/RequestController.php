@@ -727,27 +727,29 @@ class RequestController extends Controller
                 }
     
                 // FOR ALLOWANCE AND DELEGATED
-                if($validated["status"] === "released" && $fuelRequest->source_id == 1){
+                if($validated["status"] === "released"){
                     //PUT THE MINUS LOGIC HERE
                     //if the status is released, it should subtract from the current balance from the main items - warehousing
                     //base the minus logic on the item id from the warehousing
 
-                    $itemWarehousing = Item::where('id', $fuelRequest->fuel_type_id)->first();
-
-                    if($itemWarehousing){
-                        $itemWarehousing->update([
-                            'QuantityOnHand' => $itemWarehousing->QuantityOnHand - $fuelRequest->quantity,
-                        ]);
-
-                        TransactionWarehousing::create([
-                            'ItemID' => $fuelRequest->fuel_type_id,
-                            'ReferenceNo' => $fuelRequest->reference_number,
-                            'ReferenceType' => 'FMS',
-                            'TransactionType' => 'OUT',
-                            'Quantity' => -$fuelRequest->quantity,
-                            'CreatedBy' => $request->user()->name,
-                            'CreatedOn' => now(),
-                        ]);
+                    if($fuelRequest->source_id == 1){
+                        $itemWarehousing = Item::where('id', $fuelRequest->fuel_type_id)->first();
+    
+                        if($itemWarehousing){
+                            $itemWarehousing->update([
+                                'QuantityOnHand' => $itemWarehousing->QuantityOnHand - $fuelRequest->quantity,
+                            ]);
+    
+                            TransactionWarehousing::create([
+                                'ItemID' => $fuelRequest->fuel_type_id,
+                                'ReferenceNo' => $fuelRequest->reference_number,
+                                'ReferenceType' => 'FMS',
+                                'TransactionType' => 'OUT',
+                                'Quantity' => -$fuelRequest->quantity,
+                                'CreatedBy' => $request->user()->name,
+                                'CreatedOn' => now(),
+                            ]);
+                        }
                     }
 
                     if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
@@ -790,21 +792,9 @@ class RequestController extends Controller
                                     'CreatedOn' => now(),
                                 ]);
                             }
-                            
-                            if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
-    
-                                AllowanceService::undo($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type), $fuelRequest->quantity, $fuelRequest->id);
-    
-                            } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "2t4t"){
-    
-                                // AllowanceService::undo($fuelRequest->employeeid, 'trip-ticket', $fuelRequest->quantity, $fuelRequest->id);
-                                MilestoneAllowanceService::undoFuelRelease($fuelRequest->employeeid, "fuel-request:{$fuelRequest->id}");
-    
-                            } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "gasoline-diesel"){
-                                MilestoneAllowanceService::calculateMilestone($fuelRequest->employeeid);
-                            }
                         }
-                        
+
+                        //THIS UPDATE MUST BE DONE ON TOP OF MILESTONE CALCULATION
                         $fuelRequest->update([
                             "status" => "approved",
                             "released_by" => null,
@@ -814,7 +804,19 @@ class RequestController extends Controller
                             "billing_date" => null,
                             "unit_price" => null,
                         ]);
-    
+
+                        if($fuelRequest->type === "allowance" || $fuelRequest->type === "delegated"){
+
+                            AllowanceService::undo($fuelRequest->employeeid, $this->getAllowanceType($fuelRequest->fuel_type), $fuelRequest->quantity, $fuelRequest->id);
+
+                        } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "2t4t"){
+
+                            // AllowanceService::undo($fuelRequest->employeeid, 'trip-ticket', $fuelRequest->quantity, $fuelRequest->id);
+                            MilestoneAllowanceService::undoFuelRelease($fuelRequest->employeeid, "fuel-request:{$fuelRequest->id}");
+
+                        } else if ($fuelRequest->type === "trip-ticket" && $this->getAllowanceType($fuelRequest->fuel_type) === "gasoline-diesel"){
+                            MilestoneAllowanceService::calculateMilestone($fuelRequest->employeeid);
+                        }
 
                     } else if ($fuelRequestBeforeUpdate["status"] === "rejected" || $fuelRequestBeforeUpdate["status"] === "cancelled" || $fuelRequestBeforeUpdate["status"] === "approved"){
                         if($fuelRequestBeforeUpdate["status"] != "approved"){

@@ -12,5 +12,11 @@ class Setting extends Model
     protected $fillable = [
         "key",
         "value",
+        "frequency",
     ];
+
+    public function employees()
+    {
+        return $this->hasMany(EmployeeSetting::class);
+    }
 }

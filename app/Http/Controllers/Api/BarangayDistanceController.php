@@ -139,7 +139,7 @@ class BarangayDistanceController extends Controller
             }
 
             $exactDistance = $distance->distance_meters / 1000;
-            $distanceKm = ceil(($distance->distance_meters / 1000) + ($to->road_distance) * 2.5);
+            $distanceKm = ceil(($distance->distance_meters / 1000) + ($to->road_distance) * 4);
             // $quantity = ceil($distanceKm / 35);
             $quantity = $distanceKm / $fuel_divisor;
 

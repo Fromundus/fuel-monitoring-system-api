@@ -2,11 +2,14 @@
 
 use App\Exports\RegisteredMembersExport;
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\AllowanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BarangayController;
 use App\Http\Controllers\Api\BarangayDistanceController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\EmployeeAllowanceController;
 use App\Http\Controllers\Api\EmployeeOverviewController;
+use App\Http\Controllers\Api\EmployeeSettingController;
 use App\Http\Controllers\Api\FuelDivisorController;
 use App\Http\Controllers\Api\FuelTypeController;
 use App\Http\Controllers\Api\InventoryController;
@@ -102,6 +105,10 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         });
 
         Route::apiResource('/sources', SourceController::class);
+        Route::apiResource('/settings', SettingController::class);
+        Route::apiResource('employee-settings', EmployeeSettingController::class);
+        Route::post('employee-settings-bulkAssign', [EmployeeSettingController::class, 'bulkAssign']);
+        Route::delete('employee-settings-bulkDelete', [EmployeeSettingController::class, 'bulkdelete']);
 
         Route::post('/scan/request', [RequestController::class, 'scanRequest']);
 

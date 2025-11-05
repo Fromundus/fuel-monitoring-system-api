@@ -11,13 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('settings', function (Blueprint $table) {
+        Schema::create('employee_settings', function (Blueprint $table) {
             $table->id();
-            $table->enum('key', ['gasoline-diesel', '2t4t', 'bfluid', 'milestone', 'liters_per_milestone']);
-            $table->string('frequency')->nullable();
-            $table->decimal('value', 8, 2);
-            $table->boolean('isActive')->default(true);
+            $table->unsignedBigInteger('employee_id'); // from external HR DB
+            $table->foreignId('setting_id')->constrained()->cascadeOnDelete();
+            $table->boolean('active')->default(true);
             $table->timestamps();
+
+            $table->unique(['employee_id', 'setting_id']);
         });
     }
 
@@ -26,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('settings');
+        Schema::dropIfExists('employee_settings');
     }
 };

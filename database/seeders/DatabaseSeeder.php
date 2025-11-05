@@ -60,19 +60,22 @@ class DatabaseSeeder extends Seeder
             'key' => 'gasoline-diesel',
             'value' => '8',
             'frequency' => 'weekly',
+            'isActive' => true,
         ]);
         
         Setting::factory()->create([
             'key' => '2t4t',
             'value' => '1',
             'frequency' => 'bi-monthly',
+            'isActive' => true,
         ]);
 
-        Setting::factory()->create([
-            'key' => 'bfluid',
-            'value' => '1',
-            'frequency' => 'quarterly',
-        ]);
+        // Setting::factory()->create([
+        //     'key' => 'bfluid',
+        //     'value' => '1',
+        //     'frequency' => 'quarterly',
+        //     'isActive' => true,
+        // ]);
         
         Setting::factory()->create([
             'key' => 'milestone',
