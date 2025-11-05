@@ -44,10 +44,6 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     
     Route::prefix('/inventories')->group(function(){
         Route::get('/', [InventoryController::class, 'index']);
-        Route::post('/', [InventoryController::class, 'store']);
-        Route::get('/{id}', [InventoryController::class, 'show']);
-        Route::put('/', [InventoryController::class, 'update']);
-        Route::delete('/', [InventoryController::class, 'destroy']);
     });
     
     //REQUESTS
@@ -96,14 +92,6 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         Route::put('/update-status', [UserController::class, 'updateStatus']);
         Route::put('/reset-password-default', [UserController::class, 'resetPasswordDefault']);
 
-        Route::prefix('/fuel-types')->group(function(){
-            Route::get('/', [FuelTypeController::class, 'index']);
-            Route::post('/', [FuelTypeController::class, 'store']);
-            Route::get('/{id}', [FuelTypeController::class, 'show']);
-            Route::put('/{id}', [FuelTypeController::class, 'update']);
-            Route::delete('/', [FuelTypeController::class, 'destroy']);
-        });
-
         Route::apiResource('/sources', SourceController::class);
         Route::apiResource('/settings', SettingController::class);
         Route::apiResource('employee-settings', EmployeeSettingController::class);
@@ -132,27 +120,6 @@ Route::get('/test', function(){
     return response()->json([
         "message" => "success"
     ], 200);
-});
-
-Route::get('/balance/{employeeid}', function($employeeid){
-    $balance = AllowanceService::getBalance($employeeid, 'b-fluid');
-
-    return response()->json([
-        "data" => $balance,
-        "message" => "success"
-    ], 200);
-});
-
-Route::get('/test/inventories', [InventoryController::class, 'index']);
-
-Route::get('/test/settings', function(){
-    return response()->json([
-        "data" => SettingService::getLatestSettings(),
-    ]);
-});
-
-Route::get('/test/vehicle/{plate_no}', function($plate_no){
-    return VehicleService::fetchVehicle($plate_no);
 });
 
 Route::post('/broadcast-test', [BroadcastTestController::class, 'broadcast']);
