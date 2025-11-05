@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Barangay;
 use App\Models\BarangayDistance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class BarangayDistanceController extends Controller
 {
@@ -139,7 +140,8 @@ class BarangayDistanceController extends Controller
             }
 
             $exactDistance = $distance->distance_meters / 1000;
-            $distanceKm = ceil(($distance->distance_meters / 1000) + ($to->road_distance) * 4);
+            $distanceKm = ceil(($distance->distance_meters / 1000) + (($to->road_distance + $from->road_distance) * 2));
+
             // $quantity = ceil($distanceKm / 35);
             $quantity = $distanceKm / $fuel_divisor;
 

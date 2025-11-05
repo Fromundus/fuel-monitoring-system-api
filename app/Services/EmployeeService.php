@@ -114,29 +114,6 @@ class EmployeeService
             )->first();
     }
 
-    // public static function getLatestBalance(int $employeeId, string $type){
-    //     // $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("week_start")->first();
-    //     $allowance = FuelAllowance::where("employeeid", $employeeId)->where('type', $type)->orderByDesc("id")->first();
-
-    //     return $allowance;
-    // }
-
-    // public static function getCurrentBalance(int $employeeId, string $type): float
-    // {
-    //     $allowance = EmployeeService::getLatestBalance($employeeId, $type);
-
-    //     if (!$allowance) {
-    //         return 0.0; // No allowance exists yet
-    //     }
-
-    //     // Total available = allowance + carried_over - used - advanced
-    //     $balance = ($allowance->allowance + $allowance->carried_over)
-    //              - $allowance->used
-    //              - $allowance->advanced;
-
-    //     return $balance; // Prevent negative balances
-    // }
-
     public static function getTotalDistanceTravelled(int $employeeid)
     {
         $fuelRequests = FuelRequest::where('employeeid', $employeeid)
@@ -169,152 +146,9 @@ class EmployeeService
         return $totalFuelConsumed;
     }
 
-    public static function checkTripTicketAllowance(int $employeeid): void
-    {
-        $milestone = self::milestone();
-
-        $totalDistance = self::getTotalDistanceTravelled($employeeid);
-
-        // How many milestones of 5000 km the employee has reached
-        $milestones = floor($totalDistance / $milestone);
-
-        // Count how many trip-ticket-allowances already exist
-        $existing = FuelAllowance::where('employeeid', $employeeid)
-            ->where('type', 'trip-ticket-allowance')
-            ->count();
-
-        // If milestones > existing, create missing rows
-        if ($milestones > $existing) {
-            for ($i = $existing + 1; $i <= $milestones; $i++) {
-                // ✅ Find last allowance for carry-over/advance
-                $lastAllowance = FuelAllowance::where('employeeid', $employeeid)
-                    ->where('type', 'trip-ticket-allowance')
-                    ->orderByDesc('id')
-                    ->first();
-
-                $carriedOver = 0;
-                $advanced = 0;
-
-                if ($lastAllowance) {
-                    $lastBalance = ($lastAllowance->allowance + $lastAllowance->carried_over)
-                                - ($lastAllowance->used + $lastAllowance->advanced);
-
-                    if ($lastBalance > 0) {
-                        $carriedOver = $lastBalance;
-                    } elseif ($lastBalance < 0) {
-                        $advanced = abs($lastBalance);
-                    }
-                }
-
-                FuelAllowance::create([
-                    'employeeid'   => $employeeid,
-                    'week_start'   => Carbon::now(),
-                    'allowance'    => 1,
-                    'carried_over' => $carriedOver,
-                    'used'         => 0,
-                    'advanced'     => $advanced,
-                    'type'         => 'trip-ticket-allowance',
-                ]);
-            }
-        }
-    }
-
-    public static function recalculateTripTicketAllowance(int $employeeid): void
-    {
-        $milestone = self::milestone();
-
-        // Recompute distance
-        $totalDistance = self::getTotalDistanceTravelled($employeeid);
-
-        Log::info($totalDistance);
-
-        // Expected milestones based on distance
-        $expectedMilestones = floor($totalDistance / $milestone);
-
-        // Current allowances
-        $existingAllowances = FuelAllowance::where('employeeid', $employeeid)
-            ->where('type', 'trip-ticket-allowance')
-            ->orderBy('id')
-            ->get();
-
-        $existingCount = $existingAllowances->count();
-
-        // ✅ Case 1: Add missing allowances (like your current function)
-        if ($expectedMilestones > $existingCount) {
-            self::checkTripTicketAllowance($employeeid);
-        }
-
-        // ✅ Case 2: Remove excess allowances
-        if ($expectedMilestones < $existingCount) {
-            $toRemove = $existingCount - $expectedMilestones;
-
-            // Get allowances from newest to oldest
-            $extraAllowances = $existingAllowances->sortByDesc('id')->take($toRemove);
-
-            Log::info($extraAllowances);
-
-            foreach ($extraAllowances as $allowance) {
-                // If allowance is unused, safe to delete
-                if ($allowance->used == 0 && $allowance->advanced == 0) {
-                    $allowance->delete();
-                } else {
-                    // ⚠️ If already used, mark it revoked (for audit trail)
-                    Log::info("test");
-
-                    // put the - NEGATIVE LOGIC HERE
-                    $allowance->update([
-                        'advanced' => $allowance->used,
-                    ]);
-                }
-            }
-        }
-    }
-
-    // public static function getDistanceSinceLastIssue(int $employeeid): array
-    // {
-    //     $milestone = self::milestone();
-
-    //     // Get the last trip-ticket allowance
-    //     $lastAllowance = FuelAllowance::where('employeeid', $employeeid)
-    //         ->where('type', 'trip-ticket-allowance')->where('used', '>', 0)
-    //         ->orderByDesc('id')
-    //         ->first();
-
-    //     $query = FuelRequest::where('employeeid', $employeeid)
-    //         ->where('type', 'trip-ticket')
-    //         ->where('status', 'released')
-    //         ->with('tripTickets.rows');
-
-    //     if ($lastAllowance) {
-    //         $query->where('created_at', '>', $lastAllowance->updated_at);
-    //     }
-
-    //     $fuelRequests = $query->get();
-
-    //     $distance = 0;
-    //     foreach ($fuelRequests as $request) {
-    //         foreach ($request->tripTickets as $ticket) {
-    //             foreach ($ticket->rows as $row) {
-    //                 $distance += $row->distance ?? 0;
-    //             }
-    //         }
-    //     }
-
-    //     // Calculate milestone progress
-    //     $remaining = max($milestone - $distance, 0);
-    //     $reached = $distance >= $milestone;
-
-    //     return [
-    //         'distance_since_last' => $distance,
-    //         'remaining'           => $remaining,
-    //         'reached'             => $reached,
-    //         // 'milestone'           => $milestone,
-    //     ];
-    // }
-
     public static function getDistanceSinceLastIssue(int $employeeid): array
     {
-        $milestone = self::milestone();
+        $milestone = SettingService::getLatestMilestoneSettings()->value;
 
         // Get the last "use" transaction for trip-ticket
         $lastUse = AllowanceTransaction::where('employeeid', $employeeid)
@@ -355,11 +189,4 @@ class EmployeeService
             // 'milestone'        => $milestone, // uncomment if needed
         ];
     }
-
-
-    public static function milestone(){
-        $milestone = 50;
-        return $milestone;
-    }
-
 }

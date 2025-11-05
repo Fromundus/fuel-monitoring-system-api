@@ -17,7 +17,7 @@ return new class extends Migration
 
             $table->enum('type', ['trip-ticket', 'gasoline-diesel', '2t4t', 'b-fluid']);
             $table->enum('tx_type', ['grant', 'use', 'adjustment', 'reversal']);
-            $table->decimal('quantity', 10, 2);
+            $table->decimal('quantity', 8, 2);
             $table->string('reference')->nullable();
             $table->timestamp('granted_at')->nullable();
 

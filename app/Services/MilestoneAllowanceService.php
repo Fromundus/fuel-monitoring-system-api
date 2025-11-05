@@ -41,11 +41,13 @@ class MilestoneAllowanceService
         self::calculateMilestone($employeeid);
     }
 
-
     public static function calculateMilestone(int $employeeid)
     {
-        $milestone = self::milestone();
-        $litersPerMilestone = self::litersPerMilestone();
+        $milestone = SettingService::getLatestMilestoneSettings()->value;
+        $litersPerMilestone = SettingService::getLatestLitersPerMilestoneSettings()->value;
+
+        Log::info($milestone);
+
         $totalDistance = EmployeeService::getTotalDistanceTravelled($employeeid); // released trips only
 
         $expectedMilestones = floor($totalDistance / $milestone);
@@ -72,13 +74,5 @@ class MilestoneAllowanceService
                 'granted_at' => now(),
             ]);
         }
-    }
-
-    private static function milestone(){
-        return 50;
-    }
-
-    private static function litersPerMilestone(){
-        return 2;
     }
 }
