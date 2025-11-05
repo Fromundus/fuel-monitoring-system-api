@@ -18,9 +18,15 @@ return new class extends Migration
             $table->string("driver");
             $table->date('date');
 
-            $table->foreign("request_id")->references("id")->on("requests")->onDelete("cascade");
+            $table->decimal('milestone_value', 8, 2)->nullable();
+            $table->decimal('liters_per_milestone', 8, 2)->nullable();
+            $table->timestamp('settings_snapshot_at')->nullable();
 
+            $table->foreign("request_id")->references("id")->on("requests")->onDelete("cascade");
+            
             $table->timestamps();
+
+            $table->index(['milestone_value', 'liters_per_milestone']);
         });
     }
 

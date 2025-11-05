@@ -18,6 +18,7 @@ use App\Services\BroadcastEventService;
 use App\Services\EmployeeService;
 use App\Services\MilestoneAllowanceService;
 use App\Services\RequestService;
+use App\Services\SettingService;
 use App\Services\VehicleService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -352,7 +353,6 @@ class RequestController extends Controller
                             "date" => $item["date"],
                         ]);
                     }
-                    
                 }
             }
 
@@ -765,6 +765,18 @@ class RequestController extends Controller
                         MilestoneAllowanceService::calculateMilestone($fuelRequest->employeeid);
                         //THIS IS FOR CHECKING IF THE EMPLOYEE REACHED THE MILESTONE, IF IT REACHED THE MILESTONE, IT WILL ADD QUANTITY - THIS IS FOR 2t4t - ALSO DECLARED AS TRIPTICKET-ALLOWANCE
                     }
+
+                    
+                    $milestone = SettingService::getLatestMilestoneSettings()->value;
+                    $litersPerMilestone = SettingService::getLatestLitersPerMilestoneSettings()->value;
+                    
+                    $tripTicket = TripTicket::where('request_id', $fuelRequest->id)->first();
+                    
+                    $tripTicket->update([
+                        'milestone_value' => $tripTicket->milestone_value ?? $milestone,
+                        'liters_per_milestone' => $tripTicket->liters_per_milestone ?? $litersPerMilestone,
+                        'settings_snapshot_at' => $tripTicket->settings_snapshot_at ?? now(),
+                    ]);
                 }
                 
                 if ($validated["status"] === "undo"){
