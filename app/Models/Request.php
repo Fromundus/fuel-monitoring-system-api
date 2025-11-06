@@ -48,6 +48,8 @@ class Request extends Model
 
         "source_id",
 
+        "purpose_id",
+
         'date',
 
         "reference_number",
@@ -65,6 +67,10 @@ class Request extends Model
 
     public function source(){
         return $this->belongsTo(Source::class);
+    }
+
+    public function requestPurpose(){
+        return $this->belongsTo(Purpose::class, 'purpose_id');
     }
 
     public function getVehicleAttribute()

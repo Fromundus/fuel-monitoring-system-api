@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Barangay;
 use App\Models\FuelType;
 use App\Models\Inventory;
+use App\Models\Purpose;
 use App\Models\Setting;
 use App\Models\Source;
 use App\Models\User;
@@ -54,6 +55,22 @@ class DatabaseSeeder extends Seeder
 
         Source::factory()->create([
             'name' => "GELO'S GO - FUEL",
+        ]);
+
+        Purpose::factory()->create([
+            'name' => "COLLECTION",
+        ]);
+
+        Purpose::factory()->create([
+            'name' => "KWH METER READING ",
+        ]);
+
+        Purpose::factory()->create([
+            'name' => "COOP MOTORCYCLE MAINTENANCE",
+        ]);
+        
+        Purpose::factory()->create([
+            'name' => "CHANGE OIL",
         ]);
 
         Setting::factory()->create([

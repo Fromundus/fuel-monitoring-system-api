@@ -26,7 +26,7 @@ return new class extends Migration
 
             $table->decimal('fuel_divisor', 12, 2)->nullable();
             
-            $table->string("purpose");
+            $table->text("purpose")->nullable();
 
             $table->decimal("quantity", 12, 2)->default(0);
             $table->string("unit");
@@ -49,13 +49,16 @@ return new class extends Migration
 
             $table->unsignedBigInteger("source_id");
 
+            $table->unsignedBigInteger("purpose_id")->nullable();
+
             $table->timestamp('date');
 
             $table->string("reference_number")->unique();
 
             $table->text('remarks')->nullable();
 
-            $table->foreign('source_id')->references('id')->on('sources')->noActionOnDelete();
+            $table->foreign('source_id')->references('id')->on('sources')->onDelete('cascade');
+            $table->foreign('purpose_id')->references('id')->on('purposes')->onDelete('cascade');
 
             $table->index(['type', 'status', 'fuel_type', 'source_id']);
 

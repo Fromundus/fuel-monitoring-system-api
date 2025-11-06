@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EmployeeWithBalanceResource;
 use App\Models\Barangay;
+use App\Models\Purpose;
 use App\Models\Request as ModelsRequest;
 use App\Models\Source;
 use App\Models\TripTicket;
@@ -37,10 +38,11 @@ class RequestController extends Controller
         $status = $request->query('status');
         $fuel_type = $request->query('fuel_type');
         $source = $request->query('source');
+        $purpose = $request->query('purpose');
 
         $billing_date = $request->query('billing_date');
 
-        $query = ModelsRequest::query()->with(["tripTickets.rows", "logs", "source"]);
+        $query = ModelsRequest::query()->with(["tripTickets.rows", "logs", "source", "requestPurpose"]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -68,6 +70,10 @@ class RequestController extends Controller
             } else if ($source !== 'all' && $source !== "outside"){
                 $query->where('source_id', $source);
             }
+        }
+
+        if($purpose && $purpose !== 'all'){
+            $query->where('purpose_id', $purpose);
         }
 
         if($billing_date && $billing_date !== 'all'){
@@ -104,6 +110,8 @@ class RequestController extends Controller
 
         $sources = Source::all();
 
+        $purposes = Purpose::all();
+
         // $billingDates = ModelsRequest::select('billing_date')
         //     ->whereNotNull('billing_date')
         //     ->groupBy('billing_date')
@@ -130,13 +138,14 @@ class RequestController extends Controller
             "requests" => $requests,
             "counts" => $counts,
             "sources" => $sources ?? [],
+            "purposes" => $purposes ?? [],
             "billing_dates" => $billingDates ?? [],
             "grand_total" => number_format($grandTotal, 2),
         ]);
     }
 
     public function show($id){
-        $request = ModelsRequest::with(["tripTickets.rows", "logs", "source"])->findOrFail($id);
+        $request = ModelsRequest::with(["tripTickets.rows", "logs", "source", "requestPurpose"])->findOrFail($id);
         $barangays = Barangay::all();
         $employee = EmployeeService::fetchActiveEmployee($request->employeeid);
 
@@ -163,7 +172,8 @@ class RequestController extends Controller
                     "division" => "nullable|string",
                     "plate_number" => "required|string",
                     "fuel_divisor" => "required|numeric",
-                    "purpose" => "required|string|max:255",
+                    "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                    "purpose_id" => "required_if:purpose,null|nullable|integer",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
                     "fuel_type_id" => "required|string",
@@ -189,7 +199,8 @@ class RequestController extends Controller
                     "division" => "nullable|string",
                     "plate_number" => "nullable|string",
                     "fuel_divisor" => "nullable|numeric",
-                    "purpose" => "required|string|max:255",
+                    "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                    "purpose_id" => "required_if:purpose,null|nullable|integer",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
                     "fuel_type_id" => "required|string",
@@ -218,7 +229,8 @@ class RequestController extends Controller
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
                 "fuel_divisor" => "nullable|numeric",
-                "purpose" => "required|string|max:255",
+                "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                "purpose_id" => "required_if:purpose,null|nullable|integer",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
@@ -247,7 +259,8 @@ class RequestController extends Controller
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
                 "fuel_divisor" => "nullable|numeric",
-                "purpose" => "required|string|max:255",
+                "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                "purpose_id" => "required_if:purpose,null|nullable|integer",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
@@ -274,7 +287,8 @@ class RequestController extends Controller
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
                 "fuel_divisor" => "nullable|numeric",
-                "purpose" => "required|string|max:255",
+                "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                "purpose_id" => "required_if:purpose,null|nullable|integer",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
@@ -316,7 +330,7 @@ class RequestController extends Controller
 
                 "vehicle_id" => $request->plate_number ? VehicleService::fetchVehicle($request->plate_number)->id : null,
                 "fuel_divisor" => $request->fuel_divisor ?? null,
-                "purpose" => $request->purpose,
+                "purpose" => $request->purpose ?? null,
                 "quantity" => $request->quantity,
                 "unit" => $request->unit,
                 "fuel_type_id" => $request->fuel_type_id,
@@ -325,6 +339,7 @@ class RequestController extends Controller
 
                 // "source" => $request->source,
                 "source_id" => $request->source_id,
+                "purpose_id" => $request->purpose_id ?? null,
 
                 "date" => $request->date ?? Carbon::now(),
 
@@ -390,7 +405,8 @@ class RequestController extends Controller
                     "division" => "nullable|string",
                     "plate_number" => "required|string",
                     "fuel_divisor" => "nullable|sometimes|numeric",
-                    "purpose" => "required|string|max:255",
+                    "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                    "purpose_id" => "required_if:purpose,null|nullable|integer",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
                     "fuel_type_id" => "required|string",
@@ -416,7 +432,8 @@ class RequestController extends Controller
                     "division" => "nullable|string",
                     "plate_number" => "nullable|string",
                     "fuel_divisor" => "nullable|numeric",
-                    "purpose" => "required|string|max:255",
+                    "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                    "purpose_id" => "required_if:purpose,null|nullable|integer",
                     "quantity" => "required|numeric|min:1",
                     "unit" => "required|string",
                     "fuel_type_id" => "required|string",
@@ -445,7 +462,8 @@ class RequestController extends Controller
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
                 "fuel_divisor" => "nullable|numeric",
-                "purpose" => "required|string|max:255",
+                "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                "purpose_id" => "required_if:purpose,null|nullable|integer",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
@@ -474,7 +492,8 @@ class RequestController extends Controller
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
                 "fuel_divisor" => "nullable|numeric",
-                "purpose" => "required|string|max:255",
+                "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                "purpose_id" => "required_if:purpose,null|nullable|integer",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
@@ -501,7 +520,8 @@ class RequestController extends Controller
                 "division" => "nullable|string",
                 "plate_number" => "nullable|string",
                 "fuel_divisor" => "nullable|numeric",
-                "purpose" => "required|string|max:255",
+                "purpose" => "required_if:purpose_id,null|nullable|string|max:255",
+                "purpose_id" => "required_if:purpose,null|nullable|integer",
                 "quantity" => "required|numeric|min:1",
                 "unit" => "required|string",
                 "fuel_type_id" => "required|string",
@@ -548,7 +568,7 @@ class RequestController extends Controller
 
                 "vehicle_id" => $request->plate_number ? VehicleService::fetchVehicle($request->plate_number)->id : null,
                 "fuel_divisor" => $request->fuel_divisor ?? $fuelRequest->fuel_divisor,
-                "purpose" => $request->purpose,
+                "purpose" => $request->purpose ?? null,
                 "quantity" => $request->quantity,
                 "unit" => $request->unit,
                 "fuel_type_id" => $request->fuel_type_id,
@@ -557,6 +577,7 @@ class RequestController extends Controller
 
                 // "source" => $request->source,
                 "source_id" => $request->source_id,
+                "purpose_id" => $request->purpose_id ?? null,
 
                 "date" => $request->date,
 
@@ -771,12 +792,15 @@ class RequestController extends Controller
                     $litersPerMilestone = SettingService::getLatestLitersPerMilestoneSettings()->value;
                     
                     $tripTicket = TripTicket::where('request_id', $fuelRequest->id)->first();
+
+                    if($tripTicket){
+                        $tripTicket->update([
+                            'milestone_value' => $tripTicket->milestone_value ?? $milestone,
+                            'liters_per_milestone' => $tripTicket->liters_per_milestone ?? $litersPerMilestone,
+                            'settings_snapshot_at' => $tripTicket->settings_snapshot_at ?? now(),
+                        ]);
+                    }
                     
-                    $tripTicket->update([
-                        'milestone_value' => $tripTicket->milestone_value ?? $milestone,
-                        'liters_per_milestone' => $tripTicket->liters_per_milestone ?? $litersPerMilestone,
-                        'settings_snapshot_at' => $tripTicket->settings_snapshot_at ?? now(),
-                    ]);
                 }
                 
                 if ($validated["status"] === "undo"){

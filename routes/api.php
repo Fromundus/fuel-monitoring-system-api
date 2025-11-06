@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\FuelDivisorController;
 use App\Http\Controllers\Api\FuelTypeController;
 use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\MemberController;
+use App\Http\Controllers\Api\PurposeController;
 use App\Http\Controllers\Api\RegisteredMemberController;
 use App\Http\Controllers\Api\RequestController;
 use App\Http\Controllers\Api\SettingController;
@@ -92,6 +93,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         Route::put('/update-status', [UserController::class, 'updateStatus']);
         Route::put('/reset-password-default', [UserController::class, 'resetPasswordDefault']);
 
+        Route::apiResource('/purposes', PurposeController::class);
+        Route::get('/all-purposes', [PurposeController::class, 'allPurposes']);
         Route::apiResource('/sources', SourceController::class);
         Route::apiResource('/settings', SettingController::class);
         Route::apiResource('employee-settings', EmployeeSettingController::class);

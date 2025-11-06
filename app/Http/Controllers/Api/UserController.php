@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\BroadcastEventService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -106,6 +107,8 @@ class UserController extends Controller
             'role' => $validated['role'],
         ]);
 
+        BroadcastEventService::signal('user');
+
         return response()->noContent();
     }
 
@@ -130,6 +133,8 @@ class UserController extends Controller
         //     ActivityLogger::log('update', 'account', "Updated account: #" . $user->id . " " . $user->name . " (changed role to " . $request->role . ")");
         // }
 
+        BroadcastEventService::signal('user');
+
         return response()->json(['message' => 'Roles updated successfully']);
     }
 
@@ -148,6 +153,8 @@ class UserController extends Controller
         // foreach($users as $user){            
         //     ActivityLogger::log('update', 'account', "Updated account: #" . $user->id . " " . $user->name . " (changed role to " . $request->role . ")");
         // }
+
+        BroadcastEventService::signal('user');
 
         return response()->json(['message' => 'Status updated successfully']);
     }
@@ -216,6 +223,8 @@ class UserController extends Controller
                     "password" => Hash::make($request->password),
                 ]);
 
+                BroadcastEventService::signal('user');
+
                 return response()->json([
                     "status" => "200",
                     "message" => "Account Updated Successfully",
@@ -254,6 +263,8 @@ class UserController extends Controller
         $users = User::whereIn('id', $validated['ids'])->get();
 
         User::whereIn('id', $validated['ids'])->delete();
+
+        BroadcastEventService::signal('user');
 
         // foreach($users as $user){
         //     ActivityLogger::log('delete', 'account', "Deleted account: #" . $user->id . " " . $user->name);
