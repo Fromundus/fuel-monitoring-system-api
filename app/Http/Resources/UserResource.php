@@ -51,7 +51,8 @@ class UserResource extends JsonResource
             "middlename" => $employee->middlename ?? null,
             "suffix" => $employee->suffix ?? null,
             "isManagerial" => $isManagerial,
-
+            "roles" => $this->getRoleNames(),
+            "permissions" => $this->getAllPermissions()->pluck('name'),
         ];
     }
 }

@@ -12,6 +12,8 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -104,60 +106,50 @@ class DatabaseSeeder extends Seeder
             'value' => '1',
         ]);
 
-        // FuelType::factory()->create([
-        //     'name' => 'Gasoline',
-        //     'unit' => 'Liters',
-        //     'unit_short' => 'L',
-        // ]);
+        Permission::create(['name' => 'requests_page']);
 
-        // Inventory::factory()->create([
-        //     'fuel_type_id' => 1,
-        //     'quantity' => 0,
-        // ]);
+        Permission::create(['name' => 'employees_page']);
 
-        // FuelType::factory()->create([
-        //     'name' => 'Diesel',
-        //     'unit' => 'Liters',
-        //     'unit_short' => 'L',
-        // ]);
+        Permission::create(['name' => 'reports_page']);
 
-        // Inventory::factory()->create([
-        //     'fuel_type_id' => 2,
-        //     'quantity' => 0,
-        // ]);
+        Permission::create(['name' => 'activity_logs_page']);
 
-        // FuelType::factory()->create([
-        //     'name' => '4T',
-        //     'unit' => 'Liters',
-        //     'unit_short' => 'L',
-        // ]);
+        Permission::create(['name' => 'accounts_page']);
 
-        // Inventory::factory()->create([
-        //     'fuel_type_id' => 3,
-        //     'quantity' => 0,
-        // ]);
+        Permission::create(['name' => 'source_settings_page']);
 
-        // FuelType::factory()->create([
-        //     'name' => '2T',
-        //     'unit' => 'Liters',
-        //     'unit_short' => 'L',
-        // ]);
+        Permission::create(['name' => 'purpose_settings_page']);
 
-        // Inventory::factory()->create([
-        //     'fuel_type_id' => 4,
-        //     'quantity' => 0,
-        // ]);
+        Permission::create(['name' => 'vehicle_settings_page']);
 
-        // FuelType::factory()->create([
-        //     'name' => 'B-fluid',
-        //     'unit' => 'Liters',
-        //     'unit_short' => 'L',
-        // ]);
+        Permission::create(['name' => 'allowance_settings_page']);
 
-        // Inventory::factory()->create([
-        //     'fuel_type_id' => 5,
-        //     'quantity' => 0,
-        // ]);
+        Permission::create(['name' => 'profile_page']);
+
+        // Create roles
+        $superadmin = Role::create(['name' => 'superadmin']);
+        $warehouse_admin = Role::create(['name' => 'warehouse_admin']);
+        $audit_admin = Role::create(['name' => 'audit_admin']);
+        $motorpool_admin = Role::create(['name' => 'motorpool_admin']);
+
+        $user = Role::create(['name' => 'user']);
+
+        // Assign permissions
+        $superadmin->givePermissionTo([
+            'requests_page', 
+            'employees_page',
+            'reports_page',
+            'activity_logs_page',
+            'accounts_page',
+            'source_settings_page',
+            'purpose_settings_page',
+            'vehicle_settings_page',
+            'allowance_settings_page',
+            'profile_page',
+        ]);
+
+        // Assign roles to users
+        // $user1->assignRole('admin');
 
         $this->call([
             BarangaySeeder::class,

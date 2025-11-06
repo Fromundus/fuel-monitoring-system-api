@@ -24,6 +24,7 @@ use App\Http\Controllers\Second\EmployeeController;
 use App\Http\Controllers\Second\SecondController;
 use App\Http\Controllers\Second\VehicleController;
 use App\Http\Controllers\Tets\BroadcastTestController;
+use App\Models\User;
 use App\Models\Warehousing\Item;
 use App\Services\AllowanceService;
 use App\Services\EmployeeService;
@@ -126,3 +127,12 @@ Route::get('/test', function(){
 });
 
 Route::post('/broadcast-test', [BroadcastTestController::class, 'broadcast']);
+
+Route::get('/test/assign-role/{id}', function($id){
+    $user = User::where('id', $id)->first();
+    $user->assignRole('superadmin');
+
+    return response()->json([
+        "message" => "success",
+    ]);
+});
