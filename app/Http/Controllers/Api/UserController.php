@@ -97,7 +97,7 @@ class UserController extends Controller
             'role' => ['required', 'string'],
         ]);
 
-        User::create([
+        $user = User::create([
             'employeeid' => $validated['employeeid'],
             'username' => $validated['username'],
             'name' => $validated['name'],
@@ -106,6 +106,8 @@ class UserController extends Controller
             'email_verified_at' => now(),
             'role' => $validated['role'],
         ]);
+
+        $user->assignSingleRole($validated['role']);
 
         BroadcastEventService::signal('user');
 

@@ -55,4 +55,20 @@ class User extends Authenticatable
     public function activityLogs(){
         return $this->hasMany(ActivityLog::class);
     }
+
+    protected static function booted()
+    {
+        static::saving(function ($user) {
+            if ($user->roles()->exists()) {
+                $user->role = $user->getRoleNames()->first();
+            }
+        });
+    }
+
+    public function assignSingleRole(string $roleName)
+    {
+        $this->syncRoles([$roleName]);
+        $this->role = $roleName;
+        $this->save();
+    }
 }

@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\MemberController;
 use App\Http\Controllers\Api\PurposeController;
 use App\Http\Controllers\Api\RegisteredMemberController;
 use App\Http\Controllers\Api\RequestController;
+use App\Http\Controllers\Api\RoleAndPermissionController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SourceController;
 use App\Http\Controllers\Api\UserController;
@@ -110,6 +111,12 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         //ACTIVITY LOGS
         Route::get('/activity-logs', [ActivityLogController::class, 'index']);
     });
+
+    Route::get('/roles', [RoleAndPermissionController::class, 'roles']);
+    Route::get('/permissions', [RoleAndPermissionController::class, 'permissions']);
+
+    Route::get('/users/{id}/access', [RoleAndPermissionController::class, 'access']);
+    Route::post('/users/{id}/access', [RoleAndPermissionController::class, 'updateUserAccess']);
     
     //USER ACCOUNTS
     Route::put('/updateuser/{id}', [UserController::class, 'update']);
@@ -130,7 +137,7 @@ Route::post('/broadcast-test', [BroadcastTestController::class, 'broadcast']);
 
 Route::get('/test/assign-role/{id}', function($id){
     $user = User::where('id', $id)->first();
-    $user->assignRole('superadmin');
+    $user->assignSingleRole('superadmin');
 
     return response()->json([
         "message" => "success",
