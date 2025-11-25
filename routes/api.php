@@ -52,6 +52,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     //REQUESTS
     Route::prefix('/requests')->group(function(){
         Route::get('/', [RequestController::class, 'index']);
+        Route::get('/outside', [RequestController::class, 'outsideIndex']);
         Route::get('/{id}', [RequestController::class, 'show']);
         Route::get('/check-if-capable-of-creating-request/{id}', [RequestController::class, 'checkIfCapableOfCreatingRequest']);
         Route::post('/', [RequestController::class, 'store']);

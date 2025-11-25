@@ -31,16 +31,127 @@ use Illuminate\Validation\ValidationException;
 
 class RequestController extends Controller
 {
+    // public function index(Request $request){
+    //     $search = $request->query('search');
+    //     $perPage = $request->query('per_page', 10);
+    //     $type = $request->query('type');
+    //     $status = $request->query('status');
+    //     $fuel_type = $request->query('fuel_type');
+    //     $source = $request->query('source');
+    //     $purpose = $request->query('purpose');
+
+    //     $billing_date = $request->query('billing_date');
+
+    //     $query = ModelsRequest::query()->with(["tripTickets.rows", "logs", "source", "requestPurpose"]);
+
+    //     if ($search) {
+    //         $query->where(function ($q) use ($search) {
+    //             $q->where('requested_by', 'like', "%{$search}%")
+    //             ->orWhere('department', 'like', "%{$search}%")
+    //             ->orWhere('reference_number', 'like', "%{$search}%");
+    //         });
+    //     }
+
+    //     if ($type && $type !== 'all') {
+    //         $query->where('type', $type);
+    //     }
+
+    //     if($status && $status !== 'all'){
+    //         $query->where('status', $status);
+    //     }
+
+    //     if($fuel_type && $fuel_type !== 'all'){
+    //         $query->where('fuel_type', $fuel_type);
+    //     }
+
+    //     if($source){
+    //         if($source === "outside"){
+    //             $query->whereNot('source_id', 1);
+    //         } else if ($source !== 'all' && $source !== "outside"){
+    //             $query->where('source_id', $source);
+    //         }
+    //     }
+
+    //     if($purpose && $purpose !== 'all'){
+    //         $query->where('purpose_id', $purpose);
+    //     }
+
+    //     if($billing_date && $billing_date !== 'all'){
+    //         $query->where('billing_date', $billing_date);
+    //     }
+
+    //     $grandTotal = (clone $query)
+    //         ->select(DB::raw('SUM(quantity * unit_price) as total'))
+    //         ->value('total') ?? 0;
+
+    //     if ($perPage === 'all' || (int)$perPage === 0) {
+    //         $allRequests = $query->orderBy('updated_at', 'desc')->get();
+
+    //         $requests = [
+    //             "current_page" => 1,
+    //             "data" => $allRequests,
+    //             "from" => 1,
+    //             "last_page" => 1,
+    //             "per_page" => $allRequests->count(),
+    //             "to" => $allRequests->count(),
+    //             "total" => $allRequests->count(),
+    //         ];
+    //     } else {
+    //         $requests = $query->orderBy('updated_at', 'desc')->paginate($perPage);
+    //     }
+        
+    //     $counts = [
+    //         'total'      => ModelsRequest::count(),
+    //         'allowance' => ModelsRequest::where('type', 'allowance')->count(),
+    //         'delegated'      => ModelsRequest::where('type', 'delegated')->count(),
+    //         'trip_ticket'      => ModelsRequest::where('type', 'trip-ticket')->count(),
+    //         'emergency'       => ModelsRequest::where('type', 'emergency')->count(),
+    //     ];
+
+    //     $sources = Source::all();
+
+    //     $purposes = Purpose::all();
+
+    //     // $billingDates = ModelsRequest::select('billing_date')
+    //     //     ->whereNotNull('billing_date')
+    //     //     ->groupBy('billing_date')
+    //     //     ->orderBy('billing_date', 'asc')
+    //     //     ->pluck('billing_date');
+
+    //     $billingDatesQuery = ModelsRequest::select('billing_date')
+    //         ->whereNotNull('billing_date');
+
+    //     if ($source) {
+    //         if ($source === "outside") {
+    //             $billingDatesQuery->whereNot('source_id', 1);
+    //         } else if ($source !== 'all' && $source !== "outside") {
+    //             $billingDatesQuery->where('source_id', $source);
+    //         }
+    //     }
+
+    //     $billingDates = $billingDatesQuery
+    //         ->groupBy('billing_date')
+    //         ->orderBy('billing_date', 'asc')
+    //         ->pluck('billing_date');
+
+    //     return response()->json([
+    //         "requests" => $requests,
+    //         "counts" => $counts,
+    //         "sources" => $sources ?? [],
+    //         "purposes" => $purposes ?? [],
+    //         "billing_dates" => $billingDates ?? [],
+    //         "grand_total" => number_format($grandTotal, 2),
+    //     ]);
+    // }
+
     public function index(Request $request){
         $search = $request->query('search');
         $perPage = $request->query('per_page', 10);
-        $type = $request->query('type');
-        $status = $request->query('status');
-        $fuel_type = $request->query('fuel_type');
-        $source = $request->query('source');
-        $purpose = $request->query('purpose');
-
-        $billing_date = $request->query('billing_date');
+        $types = (array) $request->query('type', []);
+        $statuses = (array) $request->query('status', []);
+        $fuelTypes = (array) $request->query('fuel_type', []);
+        $sources = (array) $request->query('source', []);
+        $purposes = (array) $request->query('purpose', []);
 
         $query = ModelsRequest::query()->with(["tripTickets.rows", "logs", "source", "requestPurpose"]);
 
@@ -52,37 +163,25 @@ class RequestController extends Controller
             });
         }
 
-        if ($type && $type !== 'all') {
-            $query->where('type', $type);
+        if (!empty($types) && !in_array('all', $types)) {
+            $query->whereIn('type', $types);
         }
 
-        if($status && $status !== 'all'){
-            $query->where('status', $status);
+        if (!empty($statuses) && !in_array('all', $statuses)) {
+            $query->whereIn('status', $statuses);
         }
 
-        if($fuel_type && $fuel_type !== 'all'){
-            $query->where('fuel_type', $fuel_type);
+        if (!empty($fuelTypes) && !in_array('all', $fuelTypes)) {
+            $query->whereIn('fuel_type', $fuelTypes);
         }
 
-        if($source){
-            if($source === "outside"){
-                $query->whereNot('source_id', 1);
-            } else if ($source !== 'all' && $source !== "outside"){
-                $query->where('source_id', $source);
-            }
+        if (!empty($sources) && !in_array('all', $sources)) {
+            $query->whereIn('source_id', $sources);
         }
 
-        if($purpose && $purpose !== 'all'){
-            $query->where('purpose_id', $purpose);
+        if (!empty($purposes) && !in_array('all', $purposes)) {
+            $query->whereIn('purpose_id', $purposes);
         }
-
-        if($billing_date && $billing_date !== 'all'){
-            $query->where('billing_date', $billing_date);
-        }
-
-        $grandTotal = (clone $query)
-            ->select(DB::raw('SUM(quantity * unit_price) as total'))
-            ->value('total') ?? 0;
 
         if ($perPage === 'all' || (int)$perPage === 0) {
             $allRequests = $query->orderBy('updated_at', 'desc')->get();
@@ -108,38 +207,95 @@ class RequestController extends Controller
             'emergency'       => ModelsRequest::where('type', 'emergency')->count(),
         ];
 
-        $sources = Source::all();
+        $sourcesDB = Source::all();
 
-        $purposes = Purpose::all();
+        $purposesDB = Purpose::all();
 
-        // $billingDates = ModelsRequest::select('billing_date')
-        //     ->whereNotNull('billing_date')
-        //     ->groupBy('billing_date')
-        //     ->orderBy('billing_date', 'asc')
-        //     ->pluck('billing_date');
+        return response()->json([
+            "requests" => $requests,
+            "counts" => $counts,
+            "sources" => $sourcesDB ?? [],
+            "purposes" => $purposesDB ?? [],
+        ]);
+    }
 
-        $billingDatesQuery = ModelsRequest::select('billing_date')
-            ->whereNotNull('billing_date');
+    public function outsideIndex(Request $request){
+        $search = $request->query('search');
+        $perPage = $request->query('per_page', 10);
+        $types = (array) $request->query('type', []);
+        $fuelTypes = (array) $request->query('fuel_type', []);
+        $sources = (array) $request->query('source', []);
+        $billingDates = (array) $request->query('billing_date', []);
 
-        if ($source) {
-            if ($source === "outside") {
-                $billingDatesQuery->whereNot('source_id', 1);
-            } else if ($source !== 'all' && $source !== "outside") {
-                $billingDatesQuery->where('source_id', $source);
-            }
+        $status = $request->query('status');
+
+        $query = ModelsRequest::query()->with(["tripTickets.rows", "logs", "source", "requestPurpose"])->where('status', $status);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('requested_by', 'like', "%{$search}%")
+                ->orWhere('department', 'like', "%{$search}%")
+                ->orWhere('reference_number', 'like', "%{$search}%");
+            });
         }
 
-        $billingDates = $billingDatesQuery
+        if (!empty($types) && !in_array('all', $types)) {
+            $query->whereIn('type', $types);
+        }
+
+        if (!empty($fuelTypes) && !in_array('all', $fuelTypes)) {
+            $query->whereIn('fuel_type', $fuelTypes);
+        }
+
+        if (!empty($sources) && !in_array('all', $sources)) {
+            $query->whereIn('source_id', $sources);
+        }
+
+        if (!empty($billingDates) && !in_array('all', $billingDates)) {
+            $query->whereIn('billing_date', $billingDates);
+        }
+
+        $grandTotal = (clone $query)
+            ->select(DB::raw('SUM(quantity * unit_price) as total'))
+            ->value('total') ?? 0;
+
+        if ($perPage === 'all' || (int)$perPage === 0) {
+            $allRequests = $query->orderBy('updated_at', 'desc')->get();
+
+            $requests = [
+                "current_page" => 1,
+                "data" => $allRequests,
+                "from" => 1,
+                "last_page" => 1,
+                "per_page" => $allRequests->count(),
+                "to" => $allRequests->count(),
+                "total" => $allRequests->count(),
+            ];
+        } else {
+            $requests = $query->orderBy('updated_at', 'desc')->paginate($perPage);
+        }
+
+        $sourcesDB = Source::all();
+
+        $purposesDB = Purpose::all();
+
+        $billingDatesQuery = ModelsRequest::select('billing_date')->where('status', $status)
+            ->whereNotNull('billing_date');
+
+        if (!empty($sources) && !in_array('all', $sources)) {
+            $billingDatesQuery->whereIn('source_id', $sources);
+        }
+
+        $billingDatesDB = $billingDatesQuery
             ->groupBy('billing_date')
             ->orderBy('billing_date', 'asc')
             ->pluck('billing_date');
 
         return response()->json([
             "requests" => $requests,
-            "counts" => $counts,
-            "sources" => $sources ?? [],
-            "purposes" => $purposes ?? [],
-            "billing_dates" => $billingDates ?? [],
+            "sources" => $sourcesDB ?? [],
+            "purposes" => $purposesDB ?? [],
+            "billing_dates" => $billingDatesDB ?? [],
             "grand_total" => number_format($grandTotal, 2),
         ]);
     }
