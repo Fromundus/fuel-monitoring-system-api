@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\RoleAndPermissionController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\SourceController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Export\ReportController;
 use App\Http\Controllers\Second\EmployeeController;
 use App\Http\Controllers\Second\SecondController;
 use App\Http\Controllers\Second\VehicleController;
@@ -122,6 +123,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     //USER ACCOUNTS
     Route::put('/updateuser/{id}', [UserController::class, 'update']);
     Route::put('/changepassword/{id}', [UserController::class, 'changePassword']);
+
+    Route::get('/reports/requests/export', [ReportController::class, 'exportRequests']);
 });
 
 Route::get('/barangays', [BarangayController::class, 'index']);

@@ -229,7 +229,7 @@ class RequestController extends Controller
 
         $status = $request->query('status');
 
-        $query = ModelsRequest::query()->with(["tripTickets.rows", "logs", "source", "requestPurpose"])->where('status', $status);
+        $query = ModelsRequest::query()->with(["tripTickets.rows", "logs", "source", "requestPurpose"])->where('status', $status)->whereNot('source_id', 1);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -280,7 +280,7 @@ class RequestController extends Controller
         $purposesDB = Purpose::all();
 
         $billingDatesQuery = ModelsRequest::select('billing_date')->where('status', $status)
-            ->whereNotNull('billing_date');
+            ->whereNotNull('billing_date')->whereNot('source_id', 1);
 
         if (!empty($sources) && !in_array('all', $sources)) {
             $billingDatesQuery->whereIn('source_id', $sources);
