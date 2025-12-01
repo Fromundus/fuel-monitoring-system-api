@@ -170,19 +170,19 @@ class GenerateFuelAllowances extends Command
                         ActivityLogger::log([
                             "action" => "granted",
                             "employeeid" => $employee->employee_id,
-                            "description" => "Weekly fuel allowance of {$setting["value"]} Liters of {$fuelName} granted to {$employee->employee->lastname}, {$employee->employee->firstname} {$employee->employee->middlename} {$employee->employee->suffix}.",
+                            "description" => "Fuel allowance of {$setting["value"]} Liters of {$fuelName} granted to {$employee->employee->lastname}, {$employee->employee->firstname} {$employee->employee->middlename} {$employee->employee->suffix}.",
                         ]);
                     } else if ($type == "2t4t"){
                         ActivityLogger::log([
                             "action" => "granted",
                             "employeeid" => $employee->employee_id,
-                            "description" => "Bi Monthly oil allowance of {$setting["value"]} Liters of {$fuelName} granted to {$employee->employee->lastname}, {$employee->employee->firstname} {$employee->employee->middlename} {$employee->employee->suffix}.",
+                            "description" => "Oil allowance of {$setting["value"]} Liters of {$fuelName} granted to {$employee->employee->lastname}, {$employee->employee->firstname} {$employee->employee->middlename} {$employee->employee->suffix}.",
                         ]);
                     } else if ($type == "b-fluid"){
                         ActivityLogger::log([
                             "action" => "granted",
                             "employeeid" => $employee->employee_id,
-                            "description" => "Quarterly fluid allowance of {$setting["value"]} Liters of {$fuelName} granted to {$employee->employee->lastname}, {$employee->employee->firstname} {$employee->employee->middlename} {$employee->employee->suffix}.",
+                            "description" => "Fluid allowance of {$setting["value"]} Liters of {$fuelName} granted to {$employee->employee->lastname}, {$employee->employee->firstname} {$employee->employee->middlename} {$employee->employee->suffix}.",
                         ]);
                     }
 
