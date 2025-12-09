@@ -9,6 +9,7 @@ use App\Services\BalanceWarehouseService;
 use App\Services\EmployeeService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -128,7 +129,7 @@ class ReportController extends Controller
         $sheet->setCellValue("A8", Carbon::now()->format('M d, Y'));
 
         // Apply your same filtering logic here
-        $query = ModelsRequest::query();
+        $query = ModelsRequest::query()->with('requestPurpose');
 
         if (!empty($types) && !in_array('all', $types)) {
             $query->whereIn('type', $types);
@@ -157,6 +158,7 @@ class ReportController extends Controller
         $startRow = 11; // where your first data row begins
         
         foreach ($requests as $index => $req) {
+            Log::info($req);
 
             // For every row AFTER the first, insert new rows
             if ($index > 0) {
@@ -181,7 +183,8 @@ class ReportController extends Controller
             $sheet->setCellValue("B{$currentRow}", optional($req->vehicle)->plate_no);
             $sheet->setCellValue("C{$currentRow}", $name);
             $sheet->setCellValue("D{$currentRow}", $req->reference_number);
-            $sheet->setCellValue("E{$currentRow}", $req->purpose);
+            // $sheet->setCellValue("E{$currentRow}", $req->purpose);
+            $sheet->setCellValue("E{$currentRow}", $req->purpose ?? $req->requestPurpose?->name);
             $sheet->setCellValue("F{$currentRow}", $req->quantity);
         }
 

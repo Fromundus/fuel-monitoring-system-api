@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             Permission::create(['name' => 'requests_outside_requests_bulk_release']);
             Permission::create(['name' => 'requests_scanner']);
             Permission::create(['name' => 'requests_add']);
+            Permission::create(['name' => 'requests_generate_report']);
             Permission::create(['name' => 'requests_details']);
             Permission::create(['name' => 'requests_edit']);
             Permission::create(['name' => 'requests_update_status_approve']);
@@ -45,7 +46,7 @@ class DatabaseSeeder extends Seeder
             Permission::create(['name' => 'employees_details']);
 
         //REPORTS
-        Permission::create(['name' => 'reports_page']);
+        // Permission::create(['name' => 'reports_page']);
 
         //ACTIVITY LOGS
         Permission::create(['name' => 'activity_logs_page']);
@@ -84,6 +85,9 @@ class DatabaseSeeder extends Seeder
             Permission::create(['name' => 'allowance_settings_assign_employees']);
             Permission::create(['name' => 'allowance_settings_update_values']);
 
+        //ROUTE SETTINGS
+        Permission::create(['name' => 'route_settings_page']);
+        
         //PROFILE PAGE
         Permission::create(['name' => 'profile_page']);
 
@@ -150,6 +154,8 @@ class DatabaseSeeder extends Seeder
             'role' => 'superadmin',
         ]);
         $user->assignSingleRole('superadmin');
+        $permissions = Permission::pluck('name')->toArray();
+        $superadmin->syncPermissions($permissions);
 
         Source::factory()->create([
             'name' => 'Ficelco',
@@ -164,19 +170,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         Purpose::factory()->create([
-            'name' => "COLLECTION",
+            'name' => "DISCONNECTION",
         ]);
 
         Purpose::factory()->create([
-            'name' => "KWH METER READING ",
+            'name' => "METER READING",
         ]);
 
         Purpose::factory()->create([
-            'name' => "COOP MOTORCYCLE MAINTENANCE",
-        ]);
-        
-        Purpose::factory()->create([
-            'name' => "CHANGE OIL",
+            'name' => "COOP MAINTENANCE",
         ]);
 
         Setting::factory()->create([

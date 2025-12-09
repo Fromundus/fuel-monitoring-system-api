@@ -76,10 +76,101 @@ class BarangayDistanceController extends Controller
         ]);
     }
 
+    // public function getDistances(Request $request)
+    // {
+    //     $rows = $request->input('rows'); // expect array of tripTicketRows
+    //     $fuel_divisor = $request->input('fuel_divisor');
+
+    //     if (!$rows || !is_array($rows)) {
+    //         return response()->json(['error' => 'Rows array is required'], 400);
+    //     }
+
+    //     $result = [];
+    //     $exactTotalDistance = 0;
+    //     $totalDistance = 0;
+    //     $totalQuantity = 0;
+
+    //     foreach ($rows as $row) {
+    //         $departure = $row['departure'] ?? null;
+    //         $destination = $row['destination'] ?? null;
+
+    //         if (!$departure || !$destination) {
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //             ]);
+    //             continue;
+    //         }
+
+    //         // split "Barangay, Municipality"
+    //         [$fromName, $fromMunicipality] = array_map('trim', explode(',', $departure));
+    //         [$toName, $toMunicipality] = array_map('trim', explode(',', $destination));
+
+    //         $from = Barangay::where('name', $fromName)
+    //                         ->where('municipality', $fromMunicipality)
+    //                         ->first();
+
+    //         $to = Barangay::where('name', $toName)
+    //                     ->where('municipality', $toMunicipality)
+    //                     ->first();
+
+    //         if (!$from || !$to) {
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //                 'error' => 'Barangay not found',
+    //             ]);
+    //             continue;
+    //         }
+
+    //         $idA = min($from->id, $to->id);
+    //         $idB = max($from->id, $to->id);
+
+    //         $distance = BarangayDistance::where('barangay_a_id', $idA)
+    //                                     ->where('barangay_b_id', $idB)
+    //                                     ->first();
+
+    //         if (!$distance) {
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //                 'error' => 'Distance not calculated',
+    //             ]);
+    //             continue;
+    //         }
+
+    //         $exactDistance = $distance->distance_meters / 1000;
+    //         // $distanceKm = ceil(($distance->distance_meters / 1000) + (($to->road_distance + $from->road_distance) * 2));
+    //         $distanceKm = ceil(($distance->distance_meters / 1000) + (($to->road_distance + $from->road_distance)));
+
+    //         // $quantity = ceil($distanceKm / 35);
+    //         $quantity = $distanceKm / $fuel_divisor;
+
+    //         // add to totals
+    //         $exactTotalDistance += $exactDistance;
+    //         $totalDistance += $distanceKm;
+    //         $totalQuantity += $quantity;
+
+    //         $result[] = array_merge($row, [
+    //             'distance' => $distanceKm,
+    //             'quantity' => number_format($quantity, decimals: 2),
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'rows' => $result,
+    //         // 'exact_total_distance' => number_format($exactTotalDistance, 2),
+    //         'total_distance' => number_format($totalDistance, 2),
+    //         'total_quantity' => number_format($totalQuantity, 2),
+    //         'fuel_divisor' => number_format( $fuel_divisor, 2),
+    //     ]);
+    // }
+
     public function getDistances(Request $request)
     {
-        $rows = $request->input('rows'); // expect array of tripTicketRows
+        $rows = $request->input('rows'); 
         $fuel_divisor = $request->input('fuel_divisor');
+        $purpose = $request->input('purpose');
 
         if (!$rows || !is_array($rows)) {
             return response()->json(['error' => 'Rows array is required'], 400);
@@ -90,7 +181,10 @@ class BarangayDistanceController extends Controller
         $totalDistance = 0;
         $totalQuantity = 0;
 
-        foreach ($rows as $row) {
+        $rowCount = count($rows);
+
+        foreach ($rows as $index => $row) {
+
             $departure = $row['departure'] ?? null;
             $destination = $row['destination'] ?? null;
 
@@ -102,7 +196,6 @@ class BarangayDistanceController extends Controller
                 continue;
             }
 
-            // split "Barangay, Municipality"
             [$fromName, $fromMunicipality] = array_map('trim', explode(',', $departure));
             [$toName, $toMunicipality] = array_map('trim', explode(',', $destination));
 
@@ -140,28 +233,48 @@ class BarangayDistanceController extends Controller
             }
 
             $exactDistance = $distance->distance_meters / 1000;
-            $distanceKm = ceil(($distance->distance_meters / 1000) + (($to->road_distance + $from->road_distance) * 2));
 
-            // $quantity = ceil($distanceKm / 35);
+            // -----------------------------------------------
+            // APPLY ROAD DISTANCE ONLY IF NOT FIRST FROM OR LAST TO
+            // -----------------------------------------------
+            $additionalRoad = 0;
+
+            $isFirstRow = ($index === 0);
+            $isLastRow = ($index === $rowCount - 1);
+
+            if (!$isFirstRow) {
+                $additionalRoad += $from->road_distance;
+            }
+
+            if (!$isLastRow) {
+                $additionalRoad += $to->road_distance;
+            }
+
+            $distanceKm = ceil(($distance->distance_meters / 1000) + $additionalRoad);
+
             $quantity = $distanceKm / $fuel_divisor;
 
-            // add to totals
+            // totals
             $exactTotalDistance += $exactDistance;
             $totalDistance += $distanceKm;
             $totalQuantity += $quantity;
 
             $result[] = array_merge($row, [
                 'distance' => $distanceKm,
-                'quantity' => number_format($quantity, decimals: 2),
+                'quantity' => number_format($quantity, 2),
+                'from_road_distance' => $from->road_distance,
+                'to_road_distance' => $to->road_distance,
+                'additional_road_distance' => $additionalRoad,
             ]);
         }
 
         return response()->json([
             'rows' => $result,
-            // 'exact_total_distance' => number_format($exactTotalDistance, 2),
             'total_distance' => number_format($totalDistance, 2),
-            'total_quantity' => number_format($totalQuantity, 2),
-            'fuel_divisor' => number_format( $fuel_divisor, 2),
+            // 'total_quantity' => number_format($totalQuantity, 2),
+            'total_quantity' => round($totalQuantity),
+            'fuel_divisor' => number_format($fuel_divisor, 2),
         ]);
     }
+
 }
