@@ -87,6 +87,7 @@ class DatabaseSeeder extends Seeder
 
         //ROUTE SETTINGS
         Permission::create(['name' => 'route_settings_page']);
+            Permission::create(['name' => 'route_settings_add']);
         
         //PROFILE PAGE
         Permission::create(['name' => 'profile_page']);

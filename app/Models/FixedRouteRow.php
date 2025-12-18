@@ -7,15 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class FixedRouteRow extends Model
 {
     protected $fillable = [
-        "fixed_route_id",
+        "fixed_route_group_id",
         "departure",
         "destination",
         "distance",
-        "quantity",
-        'date',
+        // "quantity",
     ];
 
-    public function fixedRoute(){
-        return $this->belongsTo(FixedRoute::class);
+    public function group(){
+        return $this->belongsTo(FixedRouteGroup::class);
     }
 }

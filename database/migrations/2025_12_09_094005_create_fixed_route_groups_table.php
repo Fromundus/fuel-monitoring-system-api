@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('fixed_routes', function (Blueprint $table) {
+        Schema::create('fixed_route_groups', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->decimal("distance", 12, 2)->default(0)->nullable();
-            $table->decimal("quantity", 12, 2)->default(0)->nullable();
+            $table->unsignedBigInteger("fixed_route_id");
+            $table->string('name');
             $table->timestamps();
+
+            $table->foreign("fixed_route_id")->references("id")->on("fixed_routes")->onDelete("cascade");
         });
     }
 
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('fixed_routes');
+        Schema::dropIfExists('fixed_route_groups');
     }
 };

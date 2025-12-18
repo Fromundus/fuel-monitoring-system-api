@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('fixed_route_rows', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger("fixed_route_id");
+            $table->unsignedBigInteger("fixed_route_group_id");
             $table->string("departure");
             $table->string("destination");
             $table->decimal("distance", 12, 2)->default(0);
-            $table->decimal("quantity", 12, 2)->default(0);
-            $table->date('date');
+            // $table->decimal("quantity", 12, 2)->default(0);
 
-            $table->foreign("fixed_route_id")->references("id")->on("fixed_routes")->onDelete("cascade");
+            $table->foreign("fixed_route_group_id")->references("id")->on("fixed_route_groups")->onDelete("cascade");
             $table->timestamps();
         });
     }

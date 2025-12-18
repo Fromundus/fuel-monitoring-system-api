@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmployeeAllowanceController;
 use App\Http\Controllers\Api\EmployeeOverviewController;
 use App\Http\Controllers\Api\EmployeeSettingController;
+use App\Http\Controllers\Api\FixedRouteController;
 use App\Http\Controllers\Api\FuelDivisorController;
 use App\Http\Controllers\Api\FuelTypeController;
 use App\Http\Controllers\Api\InventoryController;
@@ -81,6 +82,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
     //BARANGAYS
     // Route::post('/distance', [BarangayDistanceController::class, 'getDistance']);
     Route::post('/distances', [BarangayDistanceController::class, 'getDistances']);
+    Route::post('/distances-for-fixed-routes', [BarangayDistanceController::class, 'calculateDistancesForFixedRoutes']);
 
     Route::prefix('/users')->group(function(){
         Route::get('/', [UserController::class, 'index']);
@@ -104,6 +106,8 @@ Route::middleware(['auth:sanctum', 'active'])->group(function(){
         Route::apiResource('employee-settings', EmployeeSettingController::class);
         Route::post('employee-settings-bulkAssign', [EmployeeSettingController::class, 'bulkAssign']);
         Route::delete('employee-settings-bulkDelete', [EmployeeSettingController::class, 'bulkdelete']);
+        
+        Route::apiResource('/routes', FixedRouteController::class);
 
         Route::post('/scan/request', [RequestController::class, 'scanRequest']);
 

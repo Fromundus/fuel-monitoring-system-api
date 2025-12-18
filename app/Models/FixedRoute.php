@@ -12,7 +12,7 @@ class FixedRoute extends Model
         'quantity',
     ];
 
-    public function rows(){
-        return $this->hasMany(FixedRouteRow::class);
+    public function groups(){
+        return $this->hasMany(FixedRouteGroup::class);
     }
 }

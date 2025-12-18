@@ -5,11 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Barangay;
 use App\Models\BarangayDistance;
+use App\Services\RouteDistanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class BarangayDistanceController extends Controller
 {
+    public function __construct(
+        protected RouteDistanceService $distanceService
+    ) {}
+    
     public function getDistance(Request $request)
     {
         $fromId = $request->from_id;
@@ -166,9 +171,122 @@ class BarangayDistanceController extends Controller
     //     ]);
     // }
 
+    // public function getDistances(Request $request)
+    // {
+    //     $rows = $request->input('rows'); 
+    //     $fuel_divisor = $request->input('fuel_divisor');
+    //     $purpose = $request->input('purpose');
+
+    //     if (!$rows || !is_array($rows)) {
+    //         return response()->json(['error' => 'Rows array is required'], 400);
+    //     }
+
+    //     $result = [];
+    //     $exactTotalDistance = 0;
+    //     $totalDistance = 0;
+    //     $totalQuantity = 0;
+
+    //     $rowCount = count($rows);
+
+    //     foreach ($rows as $index => $row) {
+
+    //         $departure = $row['departure'] ?? null;
+    //         $destination = $row['destination'] ?? null;
+
+    //         if (!$departure || !$destination) {
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //             ]);
+    //             continue;
+    //         }
+
+    //         [$fromName, $fromMunicipality] = array_map('trim', explode(',', $departure));
+    //         [$toName, $toMunicipality] = array_map('trim', explode(',', $destination));
+
+    //         $from = Barangay::where('name', $fromName)
+    //                         ->where('municipality', $fromMunicipality)
+    //                         ->first();
+
+    //         $to = Barangay::where('name', $toName)
+    //                     ->where('municipality', $toMunicipality)
+    //                     ->first();
+
+    //         if (!$from || !$to) {
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //                 'error' => 'Barangay not found',
+    //             ]);
+    //             continue;
+    //         }
+
+    //         $idA = min($from->id, $to->id);
+    //         $idB = max($from->id, $to->id);
+
+    //         $distance = BarangayDistance::where('barangay_a_id', $idA)
+    //                                     ->where('barangay_b_id', $idB)
+    //                                     ->first();
+
+    //         if (!$distance) {
+    //             $result[] = array_merge($row, [
+    //                 'distance' => 0,
+    //                 'quantity' => 0,
+    //                 'error' => 'Distance not calculated',
+    //             ]);
+    //             continue;
+    //         }
+
+    //         $exactDistance = $distance->distance_meters / 1000;
+
+    //         // -----------------------------------------------
+    //         // APPLY ROAD DISTANCE ONLY IF NOT FIRST FROM OR LAST TO
+    //         // -----------------------------------------------
+    //         $additionalRoad = 0;
+
+    //         $isFirstRow = ($index === 0);
+    //         $isLastRow = ($index === $rowCount - 1);
+
+    //         if (!$isFirstRow) {
+    //             $additionalRoad += $from->road_distance;
+    //         }
+
+    //         if (!$isLastRow) {
+    //             $additionalRoad += $to->road_distance;
+    //         }
+
+    //         $distanceKm = ceil(($distance->distance_meters / 1000) + ($additionalRoad * 2));
+
+    //         $distanceFromAtoB = ceil($distance->distance_meters / 1000);
+
+    //         $quantity = $distanceKm / $fuel_divisor;
+
+    //         // totals
+    //         $exactTotalDistance += $exactDistance;
+    //         $totalDistance += $distanceKm;
+    //         $totalQuantity += $quantity;
+
+    //         $result[] = array_merge($row, [
+    //             'distance' => $distanceKm,
+    //             'quantity' => number_format($quantity, 2),
+    //             'from_road_distance' => $from->road_distance,
+    //             'to_road_distance' => $to->road_distance,
+    //             'additional_road_distance' => $additionalRoad,
+    //             'distance_from_a_to_b' => $distanceFromAtoB,
+    //         ]);
+    //     }
+
+    //     return response()->json([
+    //         'rows' => $result,
+    //         'total_distance' => number_format($totalDistance, 2),
+    //         'total_quantity' => number_format($totalQuantity, 2),
+    //         'fuel_divisor' => number_format($fuel_divisor, 2),
+    //     ]);
+    // }
+
     public function getDistances(Request $request)
     {
-        $rows = $request->input('rows'); 
+        $rows = $request->input('rows');
         $fuel_divisor = $request->input('fuel_divisor');
         $purpose = $request->input('purpose');
 
@@ -216,6 +334,49 @@ class BarangayDistanceController extends Controller
                 continue;
             }
 
+            $isFirstRow = ($index === 0);
+            $isLastRow  = ($index === $rowCount - 1);
+
+            /**
+             * ---------------------------------------------------
+             * SAME BARANGAY CASE (NO A → B DISTANCE)
+             * ---------------------------------------------------
+             */
+            if ($from->id === $to->id) {
+
+                $additionalRoad = 0;
+
+                if (!$isFirstRow) {
+                    $additionalRoad += $from->road_distance;
+                }
+
+                if (!$isLastRow) {
+                    $additionalRoad += $to->road_distance;
+                }
+
+                $distanceKm = ceil($additionalRoad * 2);
+                $quantity = $fuel_divisor > 0 ? $distanceKm / $fuel_divisor : 0;
+
+                $totalDistance += $distanceKm;
+                $totalQuantity += $quantity;
+
+                $result[] = array_merge($row, [
+                    'distance' => $distanceKm,
+                    'quantity' => number_format($quantity, 2),
+                    'from_road_distance' => $from->road_distance,
+                    'to_road_distance' => $to->road_distance,
+                    'additional_road_distance' => $additionalRoad,
+                    'distance_from_a_to_b' => 0,
+                ]);
+
+                continue;
+            }
+
+            /**
+             * ---------------------------------------------------
+             * DIFFERENT BARANGAY CASE
+             * ---------------------------------------------------
+             */
             $idA = min($from->id, $to->id);
             $idB = max($from->id, $to->id);
 
@@ -234,13 +395,7 @@ class BarangayDistanceController extends Controller
 
             $exactDistance = $distance->distance_meters / 1000;
 
-            // -----------------------------------------------
-            // APPLY ROAD DISTANCE ONLY IF NOT FIRST FROM OR LAST TO
-            // -----------------------------------------------
             $additionalRoad = 0;
-
-            $isFirstRow = ($index === 0);
-            $isLastRow = ($index === $rowCount - 1);
 
             if (!$isFirstRow) {
                 $additionalRoad += $from->road_distance;
@@ -250,7 +405,8 @@ class BarangayDistanceController extends Controller
                 $additionalRoad += $to->road_distance;
             }
 
-            $distanceKm = ceil(($distance->distance_meters / 1000) + $additionalRoad);
+            $distanceFromAtoB = ceil($distance->distance_meters / 1000);
+            $distanceKm = ceil(($distance->distance_meters / 1000) + ($additionalRoad * 2));
 
             $quantity = $distanceKm / $fuel_divisor;
 
@@ -265,16 +421,17 @@ class BarangayDistanceController extends Controller
                 'from_road_distance' => $from->road_distance,
                 'to_road_distance' => $to->road_distance,
                 'additional_road_distance' => $additionalRoad,
+                'distance_from_a_to_b' => $distanceFromAtoB,
             ]);
         }
 
         return response()->json([
             'rows' => $result,
             'total_distance' => number_format($totalDistance, 2),
-            // 'total_quantity' => number_format($totalQuantity, 2),
-            'total_quantity' => round($totalQuantity),
+            'total_quantity' => number_format($totalQuantity, 2),
             'fuel_divisor' => number_format($fuel_divisor, 2),
         ]);
     }
+
 
 }
