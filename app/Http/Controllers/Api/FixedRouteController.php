@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\FixedRoute;
 use App\Models\FixedRouteGroup;
 use App\Models\FixedRouteRow;
+use App\Services\BroadcastEventService;
 use App\Services\RouteDistanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -129,7 +130,7 @@ class FixedRouteController extends Controller
     {
         $validated = $request->validate([
             "name"                 => "required|unique:fixed_routes,name",
-            "quantity"             => "nullable|numeric|min:1",
+            "quantity"             => "nullable|sometimes|numeric|min:1",
             "groups"               => "required|array|min:1",
             "groups.*.name"        => "required|string",
             "groups.*.routes"      => "required|array|min:1",
@@ -174,6 +175,8 @@ class FixedRouteController extends Controller
             $route->update([
                 'distance' => $grandTotalDistance,
             ]);
+
+            BroadcastEventService::signal(signal: "route");
 
             DB::commit();
 
@@ -309,7 +312,7 @@ class FixedRouteController extends Controller
                 'required',
                 Rule::unique('fixed_routes', 'name')->ignore($id),
             ],
-            "quantity"             => "nullable|numeric|min:1",
+            "quantity"             => "nullable|sometimes|numeric|min:1",
             "groups"               => "required|array|min:1",
             "groups.*.name"        => "required|string",
             "groups.*.rows"      => "required|array|min:1",
@@ -361,6 +364,8 @@ class FixedRouteController extends Controller
             $route->update([
                 'distance' => $grandTotalDistance,
             ]);
+
+            BroadcastEventService::signal(signal: "route");
 
             DB::commit();
 
@@ -417,6 +422,8 @@ class FixedRouteController extends Controller
 
             $route->groups()->delete();
             $route->delete();
+
+            BroadcastEventService::signal(signal: "route");
 
             DB::commit();
 
