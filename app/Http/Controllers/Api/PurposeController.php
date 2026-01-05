@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Purpose;
 use App\Services\BroadcastEventService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PurposeController extends Controller
 {
@@ -18,7 +19,8 @@ class PurposeController extends Controller
 
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('account_code', 'like', "%{$search}%");
             });
         }
 
@@ -39,6 +41,7 @@ class PurposeController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'account_code' => 'required|string|max:255|unique:purposes,account_code',
             'name' => 'required|string|max:255|unique:purposes,name',
         ]);
 
@@ -54,8 +57,24 @@ class PurposeController extends Controller
 
     public function update(Request $request, Purpose $purpose)
     {
+        // $validated = $request->validate([
+        //     'account_code' => 'required|string|max:255|unique:purposes,account_code',
+        //     'name' => 'required|string|max:255|unique:purposes,name',
+        // ]);
+        
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'account_code' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('purposes', 'account_code')->ignore($purpose->id),
+            ],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('purposes', 'name')->ignore($purpose->id),
+            ],
         ]);
 
         $purpose->update($validated);

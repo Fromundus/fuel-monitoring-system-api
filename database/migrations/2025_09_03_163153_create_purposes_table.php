@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('purposes', function (Blueprint $table) {
             $table->id();
+            $table->string('account_code')->unique();
             $table->string('name')->unique();
             $table->timestamps();
         });

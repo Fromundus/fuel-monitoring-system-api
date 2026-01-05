@@ -10,6 +10,7 @@ class Purpose extends Model
     use HasFactory;
 
     protected $fillable = [
+        "account_code",
         "name",
     ];
 

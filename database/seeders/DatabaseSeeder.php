@@ -22,75 +22,80 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        //NOTE
+        //AFTER ADDING A NEW PERMISSION RUN "php artisan permission:cache-reset"
+
         //REQUESTS
-        Permission::create(['name' => 'requests_page']);
-            Permission::create(['name' => 'requests_outside_requests']);
-            Permission::create(['name' => 'requests_outside_requests_bulk_release']);
-            Permission::create(['name' => 'requests_scanner']);
-            Permission::create(['name' => 'requests_add']);
-            Permission::create(['name' => 'requests_generate_report']);
-            Permission::create(['name' => 'requests_details']);
-            Permission::create(['name' => 'requests_edit']);
-            Permission::create(['name' => 'requests_update_status_approve']);
-            Permission::create(['name' => 'requests_update_status_reject']);
-            Permission::create(['name' => 'requests_update_status_cancel']);
-            Permission::create(['name' => 'requests_update_status_release']);
-            // Permission::create(['name' => 'requests_update_status_undo']);
-            Permission::create(['name' => 'requests_update_status_undo_approve']);
-            Permission::create(['name' => 'requests_update_status_undo_reject']);
-            Permission::create(['name' => 'requests_update_status_undo_cancel']);
-            Permission::create(['name' => 'requests_update_status_undo_release']);
+        Permission::firstOrCreate(['name' => 'requests_page']);
+            Permission::firstOrCreate(['name' => 'requests_outside_requests']);
+            Permission::firstOrCreate(['name' => 'requests_outside_requests_bulk_release']);
+            Permission::firstOrCreate(['name' => 'requests_scanner']);
+            Permission::firstOrCreate(['name' => 'requests_add']);
+            Permission::firstOrCreate(['name' => 'requests_generate_report']);
+            Permission::firstOrCreate(['name' => 'requests_details']);
+            Permission::firstOrCreate(['name' => 'requests_edit']);
+            Permission::firstOrCreate(['name' => 'requests_update_status_approve']);
+            Permission::firstOrCreate(['name' => 'requests_update_status_reject']);
+            Permission::firstOrCreate(['name' => 'requests_update_status_cancel']);
+            Permission::firstOrCreate(['name' => 'requests_update_status_release']);
+            // Permission::firstOrCreate(['name' => 'requests_update_status_undo']);
+            Permission::firstOrCreate(['name' => 'requests_update_status_undo_approve']);
+            Permission::firstOrCreate(['name' => 'requests_update_status_undo_reject']);
+            Permission::firstOrCreate(['name' => 'requests_update_status_undo_cancel']);
+            Permission::firstOrCreate(['name' => 'requests_update_status_undo_release']);
 
         //EMPLOYEES
-        Permission::create(['name' => 'employees_page']);
-            Permission::create(['name' => 'employees_details']);
+        Permission::firstOrCreate(['name' => 'employees_page']);
+            Permission::firstOrCreate(['name' => 'employees_details']);
 
         //REPORTS
-        // Permission::create(['name' => 'reports_page']);
+        // Permission::firstOrCreate(['name' => 'reports_page']);
 
         //ACTIVITY LOGS
-        Permission::create(['name' => 'activity_logs_page']);
+        Permission::firstOrCreate(['name' => 'activity_logs_page']);
 
         //ACCOUNTS
-        Permission::create(['name' => 'accounts_page']);
-            Permission::create(['name' => 'accounts_add']);
-            // Permission::create(['name' => 'accounts_bulk_update_role']);
-            // Permission::create(['name' => 'accounts_update_role']);
-            Permission::create(['name' => 'accounts_manage_roles_and_permissions']);
-            Permission::create(['name' => 'accounts_bulk_delete_user']);
-            Permission::create(['name' => 'accounts_details']);
-            Permission::create(['name' => 'accounts_details_update']);
-            Permission::create(['name' => 'accounts_update_status']); // deactivate / activate
-            Permission::create(['name' => 'accounts_reset_password']);
+        Permission::firstOrCreate(['name' => 'accounts_page']);
+            Permission::firstOrCreate(['name' => 'accounts_add']);
+            // Permission::firstOrCreate(['name' => 'accounts_bulk_update_role']);
+            // Permission::firstOrCreate(['name' => 'accounts_update_role']);
+            Permission::firstOrCreate(['name' => 'accounts_manage_roles_and_permissions']);
+            Permission::firstOrCreate(['name' => 'accounts_bulk_delete_user']);
+            Permission::firstOrCreate(['name' => 'accounts_details']);
+            Permission::firstOrCreate(['name' => 'accounts_details_update']);
+            Permission::firstOrCreate(['name' => 'accounts_update_status']); // deactivate / activate
+            Permission::firstOrCreate(['name' => 'accounts_reset_password']);
         //to be continued
 
         //SOURCE SETTINGS
-        Permission::create(['name' => 'source_settings_page']);
-            Permission::create(['name' => 'source_settings_add']);
-            Permission::create(['name' => 'source_settings_update']);
+        Permission::firstOrCreate(['name' => 'source_settings_page']);
+            Permission::firstOrCreate(['name' => 'source_settings_add']);
+            Permission::firstOrCreate(['name' => 'source_settings_update']);
 
         //PURPOSE SETTINGS
-        Permission::create(['name' => 'purpose_settings_page']);
-            Permission::create(['name' => 'purpose_settings_add']);
-            Permission::create(['name' => 'purpose_settings_update']);
+        Permission::firstOrCreate(['name' => 'purpose_settings_page']);
+            Permission::firstOrCreate(['name' => 'purpose_settings_add']);
+            Permission::firstOrCreate(['name' => 'purpose_settings_update']);
 
         //VEHICLE SETTINGS
-        Permission::create(['name' => 'vehicle_settings_page']);
-            Permission::create(['name' => 'vehicle_settings_set_divisor']);
+        Permission::firstOrCreate(['name' => 'vehicle_settings_page']);
+            Permission::firstOrCreate(['name' => 'vehicle_settings_set_divisor']);
 
         //ALLOWANCE SETTINGS
-        Permission::create(['name' => 'allowance_settings_page']);
-            Permission::create(['name' => 'allowance_settings_view_list']);
-            Permission::create(['name' => 'allowance_settings_view_list_remove']);
-            Permission::create(['name' => 'allowance_settings_assign_employees']);
-            Permission::create(['name' => 'allowance_settings_update_values']);
+        Permission::firstOrCreate(['name' => 'allowance_settings_page']);
+            Permission::firstOrCreate(['name' => 'allowance_settings_view_list']);
+            Permission::firstOrCreate(['name' => 'allowance_settings_view_list_remove']);
+            Permission::firstOrCreate(['name' => 'allowance_settings_assign_employees']);
+            Permission::firstOrCreate(['name' => 'allowance_settings_update_values']);
 
         //ROUTE SETTINGS
-        Permission::create(['name' => 'route_settings_page']);
-            Permission::create(['name' => 'route_settings_add']);
+        Permission::firstOrCreate(['name' => 'route_settings_page']);
+            Permission::firstOrCreate(['name' => 'route_settings_add']);
+            Permission::firstOrCreate(['name' => 'route_settings_update']);
+            Permission::firstOrCreate(['name' => 'route_settings_delete']);
         
         //PROFILE PAGE
-        Permission::create(['name' => 'profile_page']);
+        Permission::firstOrCreate(['name' => 'profile_page']);
 
         // Create roles
         Role::create(['name' => 'superadmin']);
